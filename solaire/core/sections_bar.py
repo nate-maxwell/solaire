@@ -2,9 +2,10 @@ from PySide6 import QtGui
 from PySide6 import QtWidgets
 
 import solaire.media
+from solaire.core import broker
 
 
-class SectionsWidget(QtWidgets.QWidget):
+class SectionsBar(QtWidgets.QWidget):
     """Vertical bar with buttons for the file explorer, plugins manager, and
     git menus.
     """
@@ -37,4 +38,9 @@ class SectionsWidget(QtWidgets.QWidget):
         self.layout.addStretch()
 
     def _create_connections(self) -> None:
-        ...
+        self.explorer_button.clicked.connect(toggle_explorer)
+
+
+def toggle_explorer() -> None:
+    event = broker.Event('sections_bar', 'toggle_explorer')
+    broker.emit(event)

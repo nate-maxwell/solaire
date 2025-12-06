@@ -1,8 +1,18 @@
+"""
+PySide6 File Tree Widget for Code IDE.
+A comprehensive file browser with icons, context menus, and file filtering.
+"""
+
+
+from pathlib import Path
+from typing import Optional
+
 from PySide6 import QtWidgets
+from PySide6TK import QtWrappers
 
 
-class FileExplorer(QtWidgets.QWidget):
-    def __init__(self, parent: QtWidgets.QWidget) -> None:
+class SolaireFileTree(QtWidgets.QWidget):
+    def __init__(self, parent: Optional[QtWidgets.QWidget]) -> None:
         super().__init__(parent)
 
         self._create_widgets()
@@ -10,21 +20,17 @@ class FileExplorer(QtWidgets.QWidget):
         self._create_connections()
 
     def _create_widgets(self) -> None:
-        self.layout = QtWidgets.QVBoxLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout_main = QtWidgets.QVBoxLayout()
 
-        self.header_label = QtWidgets.QLabel('Explorer')
-        # self.header_label.setSizePolicy(
-        #     QtWidgets.QSizePolicy.Policy.Expanding,
-        #     QtWidgets.QSizePolicy.Policy.Preferred
-        # )
-        # self.header_label.setFixedHeight(20)
+        self.lbl_header = QtWidgets.QLabel('Explorer')
+
+        temp_path = Path(__file__).parent.parent.parent
+        self.file_tree = QtWrappers.FileTreeWidget(temp_path, self)
 
     def _create_layout(self) -> None:
-        self.setLayout(self.layout)
-
-        self.layout.addWidget(self.header_label)
-        self.layout.addStretch()
+        self.setLayout(self.layout_main)
+        self.layout_main.addWidget(self.lbl_header)
+        self.layout_main.addWidget(self.file_tree)
 
     def _create_connections(self) -> None:
         ...

@@ -8,8 +8,10 @@ from solaire.core import tabs
 from solaire.core import toolbar
 from solaire.core import status_bar
 from solaire.core import explorer
-from solaire.core import sections
+from solaire.core import sections_bar
 from solaire.core import shortucts
+
+from solaire.core import broker
 
 
 class SolaireClientWidget(QtWidgets.QWidget):
@@ -19,26 +21,34 @@ class SolaireClientWidget(QtWidgets.QWidget):
         self._create_widgets()
         self._create_layout()
         self._create_connections()
+        broker.register_subscriber(
+            'sections_bar',
+            'toggle_explorer',
+            self.toggle_explorer_visibility
+        )
 
     def _create_widgets(self) -> None:
         self.layout = QtWidgets.QHBoxLayout()
-        self.sections = sections.SectionsWidget(self)
+        self.sections = sections_bar.SectionsBar(self)
         self.tab_manager = tabs.SolaireTabManager(self)
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
-        self.file_explorer = explorer.FileExplorer(self)
+        self.file_explorer = explorer.SolaireFileTree(parent=self)
 
     def _create_layout(self) -> None:
         self.setLayout(self.layout)
 
-        self.splitter.addWidget(self.tab_manager)
         self.splitter.addWidget(self.file_explorer)
-        self.splitter.setSizes([1700, (1920 - 1700 - 40)])
+        self.splitter.addWidget(self.tab_manager)
+        self.splitter.setSizes([(1920 - 1700), 1700])
 
         self.layout.addWidget(self.sections)
         self.layout.addWidget(self.splitter)
 
     def _create_connections(self) -> None:
         ...
+
+    def toggle_explorer_visibility(self, e: broker.Event) -> None:
+        self.file_explorer.setVisible(not self.file_explorer.isVisible())
 
 
 class SolaireClientWindow(QtWrappers.MainWindow):

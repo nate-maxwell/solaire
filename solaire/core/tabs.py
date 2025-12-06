@@ -7,5 +7,6 @@ class SolaireTabManager(QtWidgets.QTabWidget):
     def __init__(self, parent: QtWidgets.QWidget) -> None:
         super().__init__(parent)
 
-        self.dev_editor = code_editor.CodeEditor(self)
-        self.addTab(self.dev_editor, 'Dev Editor')
+        self.addTab(code_editor.CodeEditor(self), 'Script')
+        self.addTab(code_editor.CodeEditor(self), 'Script2')
+        self.addTab(code_editor.CodeEditor(self), 'Script3')
