@@ -34,7 +34,7 @@ class SolaireClientWidget(QtWidgets.QWidget):
     def _create_widgets(self) -> None:
         self.layout = QtWidgets.QHBoxLayout()
         self.sections = sections_bar.SectionsBar(self)
-        self.tab_manager = tabs.SolaireTabManager(self)
+        self.tab_manager = tabs.EditorTabWidget(self)
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
         self.file_explorer = explorer.SolaireFileTree(parent=self)
 
