@@ -66,16 +66,13 @@ class CodeMiniMap(QtWidgets.QWidget):
 
         self._color_cache = {}  # char pos : color mappings
         self._cached_lines = []
-        self._cached_visible_blocks = []
 
         self._bg_color = QtGui.QColor(30, 30, 30)
-        self._fallback_color = self._adjust_color_brightness(
-            QtGui.QColor(212, 212, 212)
-        )
+        self._fallback_color = self._adjust_color_brightness(QtGui.QColor(212, 212, 212))
 
         self.editor.textChanged.connect(self._on_text_changed)
-        if hasattr(editor, 'foldingChanged'):
-            editor.foldingChanged.connect(self._on_folding_changed)
+        if hasattr(self.editor, 'foldingChanged'):
+            self.editor.foldingChanged.connect(self.update)
 
         self.setFixedWidth(120)
         self.setMouseTracking(True)
@@ -97,44 +94,7 @@ class CodeMiniMap(QtWidgets.QWidget):
         """Handle text changes - invalidate caches"""
         self._color_cache.clear()
         self._cached_lines = []
-        self._cached_visible_blocks = None
         self.update()
-
-    def _on_folding_changed(self) -> None:
-        """Handle folding changes - invalidate visible blocks cache"""
-        self._cached_visible_blocks = None
-        self.update()
-
-    def _get_visible_blocks(self) -> list[int]:
-        """Get list of visible (non-folded) block numbers - cached"""
-        if self._cached_visible_blocks is not None:
-            return self._cached_visible_blocks
-
-        visible = []
-        block = self.editor.document().firstBlock()
-
-        while block.isValid():
-            if block.isVisible():
-                visible.append(block.blockNumber())
-            block = block.next()
-
-        self._cached_visible_blocks = visible
-        return visible
-
-    @staticmethod
-    def _find_block_index_in_visible(
-            block_num: int,
-            visible_blocks: list[int]
-    ) -> int:
-        """Find the index of a block number in the visible blocks list"""
-        try:
-            return visible_blocks.index(block_num)
-        except ValueError:
-            # If exact block not found, find the closest visible block
-            for i, vb in enumerate(visible_blocks):
-                if vb >= block_num:
-                    return i
-            return len(visible_blocks) - 1 if visible_blocks else -1
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
         painter = QtGui.QPainter(self)
@@ -145,63 +105,64 @@ class CodeMiniMap(QtWidgets.QWidget):
             self._cached_lines = self.editor.toPlainText().split('\n')
 
         lines = self._cached_lines
+        total_lines = len(lines)
         minimap_height = self.height()
-
-        # Get visible blocks
-        visible_blocks = self._get_visible_blocks()
-        if not visible_blocks:
+        if total_lines == 0:
             return
 
-        # Find center line among visible blocks
         first_visible = self.editor.firstVisibleBlock().blockNumber()
-        center_index = self._find_block_index_in_visible(
-            first_visible,
-            visible_blocks
-        )
-        if center_index == -1:
-            center_index = 0
-
+        viewport_height = self.editor.viewport().height()
+        block_height = self.editor.fontMetrics().height()
+        visible_blocks = viewport_height // block_height + 1
+        center_line = first_visible + visible_blocks // 2
         lines_in_minimap = minimap_height // self.line_height
-        center_pos = center_index - lines_in_minimap
+
         scroll_offset = max(
-            0,
-            min(center_pos // 2, len(visible_blocks) - lines_in_minimap)
+            0, min(center_line - lines_in_minimap // 2, total_lines - lines_in_minimap)
         )
 
-        start_idx = max(0, int(scroll_offset))
-        end_idx = min(len(visible_blocks), start_idx + lines_in_minimap + 1)
+        start_line = max(0, int(scroll_offset))
+        end_line = min(total_lines, start_line + lines_in_minimap + 1)
+
+        # Pre-calculate character position
+        char_position = sum(len(lines[i]) + 1 for i in range(start_line))
 
         # Pre-allocate rect for reuse
         rect = QtCore.QRect(0, 0, self.char_width, self.line_height)
         max_width = self.width() - 5
 
         y_offset = 0
-        for idx in range(start_idx, end_idx):
-            if idx >= len(visible_blocks) or y_offset >= minimap_height:
+        for i in range(start_line, end_line):
+            if i >= len(lines) or y_offset >= minimap_height:
                 break
 
-            block_num = visible_blocks[idx]
-            if block_num >= len(lines):
+            # Skip invisible blocks
+            block = self.editor.document().findBlockByNumber(i)
+            if block.isValid() and not block.isVisible():
+                char_position += len(lines[i]) + 1
                 continue
 
-            line = lines[block_num]
+            line = lines[i]
             left_margin = 5
-            char_position = sum(len(lines[i]) + 1 for i in range(block_num))
 
+            # Batch similar colors together for fewer fillRect calls
             for j, char in enumerate(line):
                 if left_margin > max_width:
+                    char_position += len(line) - j
                     break
 
                 if char not in (' ', '\t'):
-                    color = self._get_char_color_cached(char_position + j)
+                    color = self._get_char_color_cached(char_position)
                     rect.moveTo(left_margin, y_offset)
                     painter.fillRect(rect, color)
 
                 left_margin += self.char_width
+                char_position += 1
 
+            char_position += 1  # Newline
             y_offset += self.line_height
 
-        self._draw_viewport_indicator(painter, len(visible_blocks), scroll_offset)
+        self._draw_viewport_indicator(painter, total_lines, scroll_offset)
 
     def _get_char_color_cached(self, position: int) -> QtGui.QColor:
         """Get color with caching to avoid repeated format lookups"""
@@ -257,11 +218,11 @@ class CodeMiniMap(QtWidgets.QWidget):
     def _draw_viewport_indicator(
             self,
             painter: QtGui.QPainter,
-            total_visible_lines: int,
+            total_lines: int,
             scroll_offset: float = 0
     ) -> None:
         """Draw rectangle showing visible portion of editor"""
-        if total_visible_lines == 0:
+        if total_lines == 0:
             return
 
         first_visible = self.editor.firstVisibleBlock().blockNumber()
@@ -269,14 +230,8 @@ class CodeMiniMap(QtWidgets.QWidget):
         block_height = self.editor.fontMetrics().height()
         visible_blocks = viewport_height // block_height + 1
 
-        visible_block_list = self._get_visible_blocks()
-        first_visible_index = self._find_block_index_in_visible(
-            first_visible,
-            visible_block_list
-        )
-
         # Calculate position in minimap coordinates
-        rect_y = (first_visible_index - scroll_offset) * self.line_height
+        rect_y = (first_visible - scroll_offset) * self.line_height
         rect_height = visible_blocks * self.line_height
 
         # Clamp to minimap bounds
@@ -299,37 +254,33 @@ class CodeMiniMap(QtWidgets.QWidget):
 
     def _scroll_to_position(self, y: float) -> None:
         """Scroll editor to clicked position in minimap"""
-        visible_blocks = self._get_visible_blocks()
-        if not visible_blocks:
+        if not self._cached_lines:
+            self._cached_lines = self.editor.toPlainText().split('\n')
+
+        total_lines = len(self._cached_lines)
+        if total_lines == 0:
             return
 
+        # Calculate which line was clicked based on current scroll position
         first_visible = self.editor.firstVisibleBlock().blockNumber()
         viewport_height = self.editor.viewport().height()
         block_height = self.editor.fontMetrics().height()
-        visible_blocks_count = viewport_height // block_height + 1
+        visible_blocks = viewport_height // block_height + 1
 
-        center_index = self._find_block_index_in_visible(
-            first_visible,
-            visible_blocks
-        )
+        center_line = first_visible + visible_blocks // 2
         lines_in_minimap = self.height() // self.line_height
-        center_pos = center_index - lines_in_minimap
         scroll_offset = max(
-            0,
-            min(center_pos // 2, len(visible_blocks) - lines_in_minimap)
+            0, min(center_line - lines_in_minimap // 2, total_lines - lines_in_minimap)
         )
 
-        # Calculate clicked visible block index
+        # Calculate clicked line with sensitivity applied
         cur_pos = int((y / self.line_height) * self.scroll_sensitivity)
-        clicked_idx = max(
-            0,
-            min(cur_pos + int(scroll_offset), len(visible_blocks) - 1)
-        )
-        clicked_block_num = visible_blocks[clicked_idx]
+        clicked_line = max(0, min(cur_pos + scroll_offset, total_lines - 1))
 
-        # Center viewport on that block
-        centered_scroll_line = clicked_block_num - visible_blocks_count // 2
+        # Center viewport
+        centered_scroll_line = clicked_line - visible_blocks // 2
 
+        # Scroll to that line without moving cursor
         scrollbar = self.editor.verticalScrollBar()
         centered_scroll_line = max(
             scrollbar.minimum(),
