@@ -1,3 +1,12 @@
+"""
+# Solaire Application Client
+
+* Description:
+
+    The primary application. This includes the Solaire main window, and primary
+    widget housing all window components.
+"""
+
 
 from PySide6 import QtCore
 from PySide6 import QtWidgets
@@ -20,12 +29,7 @@ class SolaireClientWidget(QtWidgets.QWidget):
 
         self._create_widgets()
         self._create_layout()
-        self._create_connections()
-        broker.register_subscriber(
-            'sections_bar',
-            'toggle_explorer',
-            self.toggle_explorer_visibility
-        )
+        self._create_subscriptions()
 
     def _create_widgets(self) -> None:
         self.layout = QtWidgets.QHBoxLayout()
@@ -44,8 +48,12 @@ class SolaireClientWidget(QtWidgets.QWidget):
         self.layout.addWidget(self.sections)
         self.layout.addWidget(self.splitter)
 
-    def _create_connections(self) -> None:
-        ...
+    def _create_subscriptions(self) -> None:
+        broker.register_subscriber(
+            'sections_bar',
+            'toggle_explorer',
+            self.toggle_explorer_visibility
+        )
 
     def toggle_explorer_visibility(self, e: broker.Event) -> None:
         self.file_explorer.setVisible(not self.file_explorer.isVisible())
