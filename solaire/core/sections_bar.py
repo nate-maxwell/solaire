@@ -1,7 +1,7 @@
 from PySide6 import QtGui
 from PySide6 import QtWidgets
 
-import solaire.media
+import solaire.core.resources
 from solaire.core import broker
 
 
@@ -21,12 +21,12 @@ class SectionsBar(QtWidgets.QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
 
         self.explorer_button = QtWidgets.QPushButton('')
-        explorer_icon = QtGui.QIcon(solaire.media.ICON_FOLDER.as_posix())
+        explorer_icon = QtGui.QIcon(solaire.core.resources.ICON_FOLDER.as_posix())
         self.explorer_button.setIcon(explorer_icon)
         self.explorer_button.setToolTip('Explorer')
 
         self.plugin_button = QtWidgets.QPushButton('')
-        plugin_icon = QtGui.QIcon(solaire.media.ICON_PLUGIN.as_posix())
+        plugin_icon = QtGui.QIcon(solaire.core.resources.ICON_PLUGIN.as_posix())
         self.plugin_button.setIcon(plugin_icon)
         self.plugin_button.setToolTip('Plugins')
 
