@@ -124,7 +124,7 @@ class CodeTextEdit(QtWidgets.QPlainTextEdit):
             Emitted when code is commented out.
         uncommented (signal(range)):
             Emitted when code is uncommented.
-        foldingChanged (Signal):
+        folding_changed (Signal):
             Emitted whenever code is folded or unfolded.
 
     Args:
@@ -145,7 +145,7 @@ class CodeTextEdit(QtWidgets.QPlainTextEdit):
     unindented = QtCore.Signal(range)
     commented = QtCore.Signal(range)
     uncommented = QtCore.Signal(range)
-    foldingChanged = QtCore.Signal()
+    folding_changed = QtCore.Signal()
 
     def __init__(
             self,
@@ -323,7 +323,7 @@ class CodeTextEdit(QtWidgets.QPlainTextEdit):
         self.fold_area.update()
         self.line_number_area.update()
 
-        self.foldingChanged.emit()
+        self.folding_changed.emit()
 
     def fold_area_paint_event(self, event: QtGui.QPaintEvent) -> None:
         """Paint fold indicators."""

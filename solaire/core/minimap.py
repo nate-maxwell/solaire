@@ -71,8 +71,8 @@ class CodeMiniMap(QtWidgets.QWidget):
         self._fallback_color = self._adjust_color_brightness(QtGui.QColor(212, 212, 212))
 
         self.editor.textChanged.connect(self._on_text_changed)
-        if hasattr(self.editor, 'foldingChanged'):
-            self.editor.foldingChanged.connect(self.update)
+        if hasattr(self.editor, 'folding_changed'):
+            self.editor.folding_changed.connect(self.update)
 
         self.setFixedWidth(120)
         self.setMouseTracking(True)
