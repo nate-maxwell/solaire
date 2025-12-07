@@ -6,8 +6,7 @@
     The primary application. This includes the Solaire main window, and primary
     widget housing all window components.
 """
-
-
+import PySide6TK.shapes
 from PySide6 import QtCore
 from PySide6 import QtWidgets
 from PySide6TK import QtWrappers
@@ -33,7 +32,7 @@ class SolaireClientWidget(QtWidgets.QWidget):
 
     def _create_widgets(self) -> None:
         self.layout = QtWidgets.QHBoxLayout()
-        self.sections = sections_bar.SectionsBar(self)
+        self.sections_bar = sections_bar.SectionsBar(self)
         self.tab_manager = tabs.EditorTabWidget(self)
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
         self.file_explorer = explorer.SolaireFileTree(parent=self)
@@ -45,7 +44,8 @@ class SolaireClientWidget(QtWidgets.QWidget):
         self.splitter.addWidget(self.tab_manager)
         self.splitter.setSizes([(1920 - 1700), 1700])
 
-        self.layout.addWidget(self.sections)
+        self.layout.addWidget(self.sections_bar)
+        self.layout.addWidget(PySide6TK.shapes.VerticalLine())
         self.layout.addWidget(self.splitter)
 
     def _create_subscriptions(self) -> None:
@@ -62,7 +62,7 @@ class SolaireClientWidget(QtWidgets.QWidget):
 class SolaireClientWindow(QtWrappers.MainWindow):
     def __init__(self) -> None:
         super().__init__('Solaire', icon_path=solaire.core.resources.ICON_PATH)
-        QtWrappers.set_style(self, QtWrappers.QSS_DIFFNES)
+        QtWrappers.set_style(self, QtWrappers.QSS_COMBINEAR)
         shortucts.init_shortcut_manager(self)  # must come before main widget
 
         self.widget_main = SolaireClientWidget()

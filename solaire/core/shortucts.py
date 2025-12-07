@@ -58,7 +58,6 @@ def open_file() -> None:
         '',
         'All Files (*);;Python Files (*.py);;Text Files (*.txt)'
     )
-    print(file_path)
 
     if not file_path:
         return
