@@ -61,8 +61,11 @@ class EditorTabWidget(QtWidgets.QTabWidget):
 
         self.tabCloseRequested.connect(self._handle_tab_close)
         self.currentChanged.connect(self.on_tab_changed)
+        self.tabBar().tabMoved.connect(self._handle_tab_moved)
 
         self._register_subscriptions()
+
+    # -----Subscription Management---------------------------------------------
 
     def _register_subscriptions(self) -> None:
         """Registers all subscriptions with the broker."""
@@ -109,21 +112,8 @@ class EditorTabWidget(QtWidgets.QTabWidget):
             self.run_code
         )
 
-    def run_code(self, event: broker.Event) -> None:
+    def run_code(self, _: broker.Event) -> None:
         print('Running code...')
-
-    def on_tab_changed(self, index: int) -> None:
-        try:
-            editor_widget = self._editor_widgets[index]
-        except KeyError:
-            return
-
-        event = broker.Event(
-            'tab_manager',
-            'active_changed',
-            editor_widget
-        )
-        broker.emit(event)
 
     def _file_opened_subscription(self, event: broker.Event) -> None:
         """When a file open has been signaled by the broker."""
@@ -155,6 +145,74 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         """When a save-all event has been signaled by the broker."""
         for i in range(self.count()):
             self.save_file(i)
+
+    # -----Tab Management------------------------------------------------------
+
+    def on_tab_changed(self, index: int) -> None:
+        try:
+            editor_widget = self._editor_widgets[index]
+        except KeyError:
+            return
+
+        event = broker.Event(
+            'tab_manager',
+            'active_changed',
+            editor_widget
+        )
+        broker.emit(event)
+
+    def _handle_tab_moved(self, from_index: int, to_index: int) -> None:
+        """Handle tab reordering by updating tracking dictionaries"""
+        # Store the data from the moved tab
+        moved_file_path = self._file_paths.get(from_index)
+        moved_modified = self._modified_state.get(from_index)
+        moved_editor = self._editor_widgets.get(from_index)
+
+        # Determine the range and direction of the shift
+        if from_index < to_index:
+            # Moving right: shift items left
+            for idx in range(from_index, to_index):
+                next_idx = idx + 1
+                if next_idx in self._file_paths:
+                    self._file_paths[idx] = self._file_paths[next_idx]
+                elif idx in self._file_paths:
+                    del self._file_paths[idx]
+
+                if next_idx in self._modified_state:
+                    self._modified_state[idx] = self._modified_state[next_idx]
+                elif idx in self._modified_state:
+                    del self._modified_state[idx]
+
+                if next_idx in self._editor_widgets:
+                    self._editor_widgets[idx] = self._editor_widgets[next_idx]
+                elif idx in self._editor_widgets:
+                    del self._editor_widgets[idx]
+        else:
+            # Moving left: shift items right
+            for idx in range(from_index, to_index, -1):
+                prev_idx = idx - 1
+                if prev_idx in self._file_paths:
+                    self._file_paths[idx] = self._file_paths[prev_idx]
+                elif idx in self._file_paths:
+                    del self._file_paths[idx]
+
+                if prev_idx in self._modified_state:
+                    self._modified_state[idx] = self._modified_state[prev_idx]
+                elif idx in self._modified_state:
+                    del self._modified_state[idx]
+
+                if prev_idx in self._editor_widgets:
+                    self._editor_widgets[idx] = self._editor_widgets[prev_idx]
+                elif idx in self._editor_widgets:
+                    del self._editor_widgets[idx]
+
+        # Place the moved tab's data at its new position
+        if moved_file_path is not None:
+            self._file_paths[to_index] = moved_file_path
+        if moved_modified is not None:
+            self._modified_state[to_index] = moved_modified
+        if moved_editor is not None:
+            self._editor_widgets[to_index] = moved_editor
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         if event.button() == QtCore.Qt.MouseButton.MiddleButton:
@@ -228,6 +286,8 @@ class EditorTabWidget(QtWidgets.QTabWidget):
             if stored_widget is widget:
                 return index
         return -1
+
+    # -----File Management-----------------------------------------------------
 
     def open_file(
             self,
