@@ -59,6 +59,7 @@ class SolaireClientWindow(QtWrappers.MainWindow):
         super().__init__('Solaire', icon_path=solaire.core.resources.ICON_PATH)
         QtWrappers.set_style(self, QtWrappers.QSS_COMBINEAR)
         shortucts.init_shortcut_manager(self)  # must come before main widget
+        broker.register_source('SYSTEM')
 
         self.widget_main = SolaireClientWidget()
         self.setCentralWidget(self.widget_main)

@@ -25,7 +25,7 @@ class CodeStructureWidget(QtWidgets.QTreeWidget):
         broker.register_source('structure_explorer')
 
     def _tab_changed_subscription(self, event: broker.Event) -> None:
-        self.update_structure(event.data)
+        self.update_structure(event.data.toPlainText())
 
     def update_structure(self, code: str) -> None:
         """Parse code and update the tree structure."""

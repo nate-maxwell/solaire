@@ -1,11 +1,43 @@
 from PySide6 import QtWidgets
 from PySide6TK import QtWrappers
 
+from solaire.core import broker
+
 
 class StatusBar(QtWrappers.Toolbar):
     def __init__(self, parent: QtWidgets.QWidget) -> None:
         super().__init__('StatusBar', parent)
 
+        broker.register_subscriber(
+            'code_editor',
+            'cursor_position',
+            self.cursor_changed_subscription
+        )
+
     def build(self) -> None:
-        # Temp to add anything for status bar visibility
-        self.addWidget(QtWrappers.VerticalSpacer(10))
+        self.addWidget(QtWrappers.VerticalSpacer(16))
+
+        self.add_toolbar_separator(0)
+
+        self.lbl_cursor = QtWidgets.QLabel('')
+        self.addWidget(self.lbl_cursor)
+        self.add_line()
+
+        self.lbl_encoding = QtWidgets.QLabel('UTF-8')
+        self.addWidget(self.lbl_encoding)
+        self.add_line()
+
+        self.lbl_tab_type = QtWidgets.QLabel('4 spaces')
+        self.addWidget(self.lbl_tab_type)
+        self.add_line()
+
+    def add_line(self) -> None:
+        width = 16
+        self.add_toolbar_separator(width)
+        self.addWidget(QtWrappers.VerticalLine())
+        self.add_toolbar_separator(width)
+
+    def cursor_changed_subscription(self, event: broker.Event) -> None:
+        line = event.data[0]
+        col = event.data[1]
+        self.lbl_cursor.setText(f'{line}:{col}')

@@ -102,6 +102,16 @@ class EditorTabWidget(QtWidgets.QTabWidget):
             self._save_all_subscription
         )
 
+        # -----Code-----
+        broker.register_subscriber(
+            'SYSTEM',
+            'RUN',
+            self.run_code
+        )
+
+    def run_code(self, event: broker.Event) -> None:
+        print('Running code...')
+
     def on_tab_changed(self, index: int) -> None:
         try:
             editor_widget = self._editor_widgets[index]
@@ -111,7 +121,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         event = broker.Event(
             'tab_manager',
             'active_changed',
-            editor_widget.toPlainText()
+            editor_widget
         )
         broker.emit(event)
 

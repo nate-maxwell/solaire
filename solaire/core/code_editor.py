@@ -178,6 +178,8 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             syntax_highlighter(self.document())
         self.highlight_current_line()
 
+        self.setFont(QtGui.QFont('Arial', 12))
+
     def _create_shortcut_signals(self) -> None:
         self.indented.connect(self.indent)
         self.unindented.connect(self.unindent)
@@ -187,7 +189,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
     def _create_connections(self) -> None:
         self.blockCountChanged.connect(self.update_line_number_area_width)
         self.updateRequest.connect(self.update_line_number_area)
-        self.cursorPositionChanged.connect(self.highlight_current_line)
+        self.cursorPositionChanged.connect(self.on_cursor_position_changed)
         self.textChanged.connect(self.analyze_fold_regions)
 
     def _create_subscriptions(self) -> None:
@@ -473,7 +475,24 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             bottom = top + self.blockBoundingRect(block).height()
             blockNumber += 1
 
+    def on_cursor_position_changed(self) -> None:
+        """On cursor position change, update the highlighted line to the new
+        current line and emit the new cursor line + col through the broker.
+        """
+        self.highlight_current_line()
+
+        cursor = self.textCursor()
+        line = cursor.blockNumber() + 1
+        col = cursor.columnNumber() + 1
+        event = broker.Event(
+            'code_editor',
+            'cursor_position',
+            (line, col)
+        )
+        broker.emit(event)
+
     def highlight_current_line(self) -> None:
+        """Add a background to the current line for visibility."""
         if self.isReadOnly():
             self.setExtraSelections([])
             return

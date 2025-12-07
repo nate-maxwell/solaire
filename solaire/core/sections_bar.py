@@ -2,7 +2,7 @@ from PySide6 import QtGui
 from PySide6 import QtWidgets
 
 import solaire.core.resources
-from solaire.core import broker
+from solaire.core import common_events
 
 
 class SectionsBar(QtWidgets.QWidget):
@@ -44,17 +44,5 @@ class SectionsBar(QtWidgets.QWidget):
         self.layout.addStretch()
 
     def _create_connections(self) -> None:
-        self.btn_explorer.clicked.connect(toggle_explorer)
-        self.btn_structure.clicked.connect(toggle_structure)
-
-
-def toggle_explorer() -> None:
-    """Signal to toggle visibility on file explorer."""
-    event = broker.Event('sections_bar', 'toggle_explorer')
-    broker.emit(event)
-
-
-def toggle_structure() -> None:
-    """Signal to toggle visibility on structure explorer."""
-    event = broker.Event('sections_bar', 'toggle_structure')
-    broker.emit(event)
+        self.btn_explorer.clicked.connect(common_events.toggle_explorer)
+        self.btn_structure.clicked.connect(common_events.toggle_structure)

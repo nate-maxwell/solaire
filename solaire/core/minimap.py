@@ -91,12 +91,17 @@ class CodeMiniMap(QtWidgets.QWidget):
         self.update()
 
     def _on_text_changed(self) -> None:
-        """Handle text changes - invalidate caches"""
+        """Handle text changes - invalidate caches."""
         self._color_cache.clear()
         self._cached_lines = []
         self.update()
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
+        """Extension of super paintEvent.
+        Responsible for drawing all the colored lines and view area rect.
+        Characters and their colors are cached, and the QRect used to draw the
+        characters is reused for optimize performance.
+        """
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, False)
         painter.fillRect(self.rect(), self._bg_color)
