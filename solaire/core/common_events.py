@@ -15,15 +15,18 @@ from PySide6 import QtWidgets
 from solaire.core import broker
 
 
+broker.register_source('common_event')
+
+
 def save_file() -> None:
     """Save the currently active file. Emits None."""
-    event = broker.Event('shortcut_manager', 'save_file')
+    event = broker.Event('common_event', 'save_file')
     broker.emit(event)
 
 
 def save_all() -> None:
     """Save all files. Emits None."""
-    event = broker.Event('shortcut_manager', 'save_all')
+    event = broker.Event('common_event', 'save_all')
     broker.emit(event)
 
 
@@ -41,7 +44,7 @@ def open_file() -> None:
     if not file_path:
         return
 
-    event = broker.Event('shortcut_manager', 'open_file', Path(file_path))
+    event = broker.Event('common_event', 'open_file', Path(file_path))
     broker.emit(event)
 
 
@@ -59,7 +62,7 @@ def open_folder() -> None:
     if not dir_path:
         return
 
-    event = broker.Event('shortcut_manager', 'open_folder', Path(dir_path))
+    event = broker.Event('common_event', 'open_folder', Path(dir_path))
     broker.emit(event)
 
 

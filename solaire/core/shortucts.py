@@ -10,7 +10,6 @@ from solaire.core import common_events
 class ShortcutManager(QtWrappers.KeyShortcutManager):
     def __init__(self, parent: QtWidgets.QWidget) -> None:
         super().__init__(parent)
-        broker.register_source('shortcut_manager')
 
         self._create_shortcuts()
 

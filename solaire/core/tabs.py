@@ -73,7 +73,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         # -----File Opened-----
 
         broker.register_subscriber(
-            'shortcut_manager',
+            'common_event',
             'open_file',
             self._file_opened_subscription
         )
@@ -86,21 +86,21 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         # -----Directory Changed-----
 
         broker.register_subscriber(
-            'shortcut_manager',
+            'common_event',
             'directory_changed',
             self._directory_changed_subscription
         )
 
         # -----File Saved-----
         broker.register_subscriber(
-            'shortcut_manager',
+            'common_event',
             'save_file',
             self._save_file_subscription
         )
 
         # -----Save All-----
         broker.register_subscriber(
-            'shortcut_manager',
+            'common_event',
             'save_all',
             self._save_all_subscription
         )
