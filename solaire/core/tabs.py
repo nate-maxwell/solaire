@@ -30,21 +30,10 @@ class DraggableTabBar(QtWidgets.QTabBar):
 
 
 class EditorTabWidget(QtWidgets.QTabWidget):
+    """Tab widget for IDE-style file editing.
+    Currently hard-coded to use Solair Code Editors rather than abstract tab
+    widget.
     """
-    Tab widget for IDE-style file editing.
-
-    Signals:
-        tab_closed(int): Emitted when a tab is closed with the tab index
-        file_opened(str): Emitted when a file is opened with the file path
-        file_saved(str): Emitted when a file is saved with the file path
-        content_modified(int, bool): Emitted when content modified state
-            changes (index, is_modified)
-    """
-
-    tab_closed = QtCore.Signal(int)
-    file_opened = QtCore.Signal(str)
-    file_saved = QtCore.Signal(str)
-    content_modified = QtCore.Signal(int, bool)
 
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
@@ -121,6 +110,13 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         if not filepath.exists():
             return
 
+        existing_index = self._find_tab_by_path(filepath)
+        if existing_index >= 0:
+            # File is already open, just switch to that tab
+            self.setCurrentIndex(existing_index)
+            self.on_tab_changed(existing_index)
+            return
+
         if filepath.suffix == '.py' or filepath.suffix == '.pyw':
             highlighter = QtWrappers.PythonHighlighter
         elif filepath.suffix == '.json':
@@ -168,43 +164,33 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         moved_modified = self._modified_state.get(from_index)
         moved_editor = self._editor_widgets.get(from_index)
 
+        def shift_items(idx_: int, new_idx: int) -> None:
+            if new_idx in self._file_paths:
+                self._file_paths[idx_] = self._file_paths[new_idx]
+            elif idx_ in self._file_paths:
+                del self._file_paths[idx_]
+
+            if new_idx in self._modified_state:
+                self._modified_state[idx_] = self._modified_state[new_idx]
+            elif idx_ in self._modified_state:
+                del self._modified_state[idx_]
+
+            if new_idx in self._editor_widgets:
+                self._editor_widgets[idx_] = self._editor_widgets[new_idx]
+            elif idx_ in self._editor_widgets:
+                del self._editor_widgets[idx_]
+
         # Determine the range and direction of the shift
         if from_index < to_index:
             # Moving right: shift items left
             for idx in range(from_index, to_index):
                 next_idx = idx + 1
-                if next_idx in self._file_paths:
-                    self._file_paths[idx] = self._file_paths[next_idx]
-                elif idx in self._file_paths:
-                    del self._file_paths[idx]
-
-                if next_idx in self._modified_state:
-                    self._modified_state[idx] = self._modified_state[next_idx]
-                elif idx in self._modified_state:
-                    del self._modified_state[idx]
-
-                if next_idx in self._editor_widgets:
-                    self._editor_widgets[idx] = self._editor_widgets[next_idx]
-                elif idx in self._editor_widgets:
-                    del self._editor_widgets[idx]
+                shift_items(idx, next_idx)
         else:
             # Moving left: shift items right
             for idx in range(from_index, to_index, -1):
                 prev_idx = idx - 1
-                if prev_idx in self._file_paths:
-                    self._file_paths[idx] = self._file_paths[prev_idx]
-                elif idx in self._file_paths:
-                    del self._file_paths[idx]
-
-                if prev_idx in self._modified_state:
-                    self._modified_state[idx] = self._modified_state[prev_idx]
-                elif idx in self._modified_state:
-                    del self._modified_state[idx]
-
-                if prev_idx in self._editor_widgets:
-                    self._editor_widgets[idx] = self._editor_widgets[prev_idx]
-                elif idx in self._editor_widgets:
-                    del self._editor_widgets[idx]
+                shift_items(idx, prev_idx)
 
         # Place the moved tab's data at its new position
         if moved_file_path is not None:
@@ -219,6 +205,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
             for i in range(self.count()):
                 if self.tabBar().tabRect(i).contains(event.pos()):
                     self.removeTab(i)
+                    self._handle_tab_close(i)
                     event.accept()
                     return
 
@@ -287,19 +274,105 @@ class EditorTabWidget(QtWidgets.QTabWidget):
                 return index
         return -1
 
+    def _find_tab_by_path(self, file_path: Path) -> int:
+        """
+        Find the tab index for a given file path.
+
+        Args:
+            file_path: Path to search for
+        Returns:
+            int: Tab index if found, -1 if not found
+        """
+        for index, path in self._file_paths.items():
+            if path == file_path:
+                return index
+        return -1
+
+    def _handle_tab_close(self, index: int) -> None:
+        """Handle tab close request"""
+        if index in self._file_paths:
+            del self._file_paths[index]
+        if index in self._modified_state:
+            del self._modified_state[index]
+        if index in self._editor_widgets:
+            del self._editor_widgets[index]
+
+        self._reindex_tracking(index)
+        self.removeTab(index)
+
+        if self.count() == 0:
+            print('lorem ipsum')
+            event = broker.Event(
+                'tab_manager',
+                'all_tabs_closed'
+            )
+            broker.emit(event)
+
+    def _mark_modified(self, index: int) -> None:
+        """Mark a tab as modified (dirty)"""
+        if index in self._modified_state and not self._modified_state[index]:
+            self._modified_state[index] = True
+            self._update_tab_title(index)
+
+    def _mark_unmodified(self, index: int) -> None:
+        """Mark a tab as unmodified (clean)"""
+        if index in self._modified_state and self._modified_state[index]:
+            self._modified_state[index] = False
+            self._update_tab_title(index)
+
+    def _update_tab_title(self, index: int) -> None:
+        """Update tab title to reflect modified state"""
+        current_title: str = self.tabText(index)
+
+        if current_title.startswith('* '):
+            current_title = current_title[2:]
+
+        if self._modified_state.get(index, False):
+            self.setTabText(index, f'* {current_title}')
+        else:
+            self.setTabText(index, current_title)
+
+    def _reindex_tracking(self, removed_index: int) -> None:
+        """Reindex tracking dictionaries after tab removal."""
+        new_file_paths: dict[int, Path] = {}
+        new_modified_state: dict[int, bool] = {}
+        new_editor_widgets: dict[int, QtWidgets.QWidget] = {}
+
+        for idx in sorted(self._file_paths.keys()):
+            if idx < removed_index:
+                new_file_paths[idx] = self._file_paths[idx]
+            elif idx > removed_index:
+                new_file_paths[idx - 1] = self._file_paths[idx]
+
+        for idx in sorted(self._modified_state.keys()):
+            if idx < removed_index:
+                new_modified_state[idx] = self._modified_state[idx]
+            elif idx > removed_index:
+                new_modified_state[idx - 1] = self._modified_state[idx]
+
+        for idx in sorted(self._editor_widgets.keys()):
+            if idx < removed_index:
+                new_editor_widgets[idx] = self._editor_widgets[idx]
+            elif idx > removed_index:
+                new_editor_widgets[idx - 1] = self._editor_widgets[idx]
+
+        self._file_paths = new_file_paths
+        self._modified_state = new_modified_state
+        self._editor_widgets = new_editor_widgets
+
     # -----File Management-----------------------------------------------------
 
     def open_file(
             self,
             file_path: Path,
-            editor_widget: QtWidgets.QPlainTextEdit
+            editor_widget: CodeEditor
     ) -> int:
         """
         Open a file in a new tab.
 
         Args:
             file_path (Path): Path to the file to open.
-            editor_widget (QPlainTextEdit): The editor widget to use for this
+            editor_widget (CodeEditor): The editor widget to use for this
                 file.
         Returns:
             int: Index of the tab, or -1 if file couldn't be opened.
@@ -337,7 +410,6 @@ class EditorTabWidget(QtWidgets.QTabWidget):
             self._modified_state[index] = False
             self._update_tab_title(index)
 
-            self.file_opened.emit(file_path.as_posix())
             return index
 
         except Exception as e:
@@ -382,80 +454,11 @@ class EditorTabWidget(QtWidgets.QTabWidget):
 
             self._mark_unmodified(index)
 
-            self.file_saved.emit(file_path.as_posix())
             return True
 
         except Exception as e:
             print(f'Error saving file {file_path.as_posix()}: {e}')
             return False
-
-    def _mark_modified(self, index: int) -> None:
-        """Mark a tab as modified (dirty)"""
-        if index in self._modified_state and not self._modified_state[index]:
-            self._modified_state[index] = True
-            self._update_tab_title(index)
-            self.content_modified.emit(index, True)
-
-    def _mark_unmodified(self, index: int) -> None:
-        """Mark a tab as unmodified (clean)"""
-        if index in self._modified_state and self._modified_state[index]:
-            self._modified_state[index] = False
-            self._update_tab_title(index)
-            self.content_modified.emit(index, False)
-
-    def _update_tab_title(self, index: int) -> None:
-        """Update tab title to reflect modified state"""
-        current_title: str = self.tabText(index)
-
-        if current_title.startswith('* '):
-            current_title = current_title[2:]
-
-        if self._modified_state.get(index, False):
-            self.setTabText(index, f'* {current_title}')
-        else:
-            self.setTabText(index, current_title)
-
-    def _handle_tab_close(self, index: int) -> None:
-        """Handle tab close request"""
-        if index in self._file_paths:
-            del self._file_paths[index]
-        if index in self._modified_state:
-            del self._modified_state[index]
-        if index in self._editor_widgets:
-            del self._editor_widgets[index]
-
-        self._reindex_tracking(index)
-
-        self.removeTab(index)
-        self.tab_closed.emit(index)
-
-    def _reindex_tracking(self, removed_index: int) -> None:
-        """Reindex tracking dictionaries after tab removal"""
-        new_file_paths: dict[int, Path] = {}
-        new_modified_state: dict[int, bool] = {}
-        new_editor_widgets: dict[int, QtWidgets.QWidget] = {}
-
-        for idx in sorted(self._file_paths.keys()):
-            if idx < removed_index:
-                new_file_paths[idx] = self._file_paths[idx]
-            elif idx > removed_index:
-                new_file_paths[idx - 1] = self._file_paths[idx]
-
-        for idx in sorted(self._modified_state.keys()):
-            if idx < removed_index:
-                new_modified_state[idx] = self._modified_state[idx]
-            elif idx > removed_index:
-                new_modified_state[idx - 1] = self._modified_state[idx]
-
-        for idx in sorted(self._editor_widgets.keys()):
-            if idx < removed_index:
-                new_editor_widgets[idx] = self._editor_widgets[idx]
-            elif idx > removed_index:
-                new_editor_widgets[idx - 1] = self._editor_widgets[idx]
-
-        self._file_paths = new_file_paths
-        self._modified_state = new_modified_state
-        self._editor_widgets = new_editor_widgets
 
     def get_file_path(self, index: Optional[int] = None) -> Optional[Path]:
         """Get the file path for a tab"""

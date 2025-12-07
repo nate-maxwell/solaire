@@ -16,16 +16,27 @@ class CodeStructureWidget(QtWidgets.QTreeWidget):
         self.setHeaderLabel('Structure')
         self.setColumnCount(1)
         self.itemClicked.connect(self.on_item_clicked)
+        self._create_subscriptions()
+
+    def _create_subscriptions(self) -> None:
+        broker.register_source('structure_explorer')
 
         broker.register_subscriber(
             'tab_manager',
             'active_changed',
             self._tab_changed_subscription
         )
-        broker.register_source('structure_explorer')
+        broker.register_subscriber(
+            'tab_manager',
+            'all_tabs_closed',
+            self._all_tabs_closed_subscription
+        )
 
     def _tab_changed_subscription(self, event: broker.Event) -> None:
         self.update_structure(event.data.toPlainText())
+
+    def _all_tabs_closed_subscription(self, _: broker.Event) -> None:
+        self.update_structure('')
 
     def update_structure(self, code: str) -> None:
         """Parse code and update the tree structure."""
