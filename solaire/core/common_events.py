@@ -1,3 +1,13 @@
+"""
+# Common Events
+
+* Description:
+
+    Events commonly shared between various widgets, such as the toolbar,
+    shortcuts, or individual component widgets.
+"""
+
+
 from pathlib import Path
 
 from PySide6 import QtWidgets
@@ -35,6 +45,24 @@ def open_file() -> None:
     broker.emit(event)
 
 
+def open_folder() -> None:
+    """Open a file dialog and switch the active project to the selected folder.
+    Emits selected filepath.
+    """
+    dir_path = QtWidgets.QFileDialog.getExistingDirectory(
+        None,
+        'Select a File',
+        '',
+        QtWidgets.QFileDialog.Option.ShowDirsOnly
+    )
+
+    if not dir_path:
+        return
+
+    event = broker.Event('shortcut_manager', 'open_folder', Path(dir_path))
+    broker.emit(event)
+
+
 def toggle_explorer() -> None:
     """Signal to toggle visibility on file explorer."""
     event = broker.Event('sections_bar', 'toggle_explorer')
@@ -45,6 +73,11 @@ def toggle_structure() -> None:
     """Signal to toggle visibility on structure explorer."""
     event = broker.Event('sections_bar', 'toggle_structure')
     broker.emit(event)
+
+
+def show_terminal() -> None:
+    """Show the terminal if it is hidden."""
+    print('Terminal coming soon!')
 
 
 def run_code() -> None:

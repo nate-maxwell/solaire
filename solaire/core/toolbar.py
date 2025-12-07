@@ -29,7 +29,8 @@ class SolaireToolbar(QtWrappers.Toolbar):
 
     def _file_section(self) -> None:
         menu = self.add_menu('File')
-        self.add_menu_command(menu, 'Open', common_events.open_file)
+        self.add_menu_command(menu, 'Open File', common_events.open_file)
+        self.add_menu_command(menu, 'Open Folder', common_events.open_file)
         self.add_menu_command(menu, 'Save', common_events.save_file)
         self.add_menu_command(menu, 'Save All', common_events.save_all)
         self.add_menu_command(menu, 'Quit', QtWidgets.QApplication.quit)

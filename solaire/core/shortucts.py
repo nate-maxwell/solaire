@@ -34,10 +34,22 @@ class ShortcutManager(QtWrappers.KeyShortcutManager):
             'Open a file.'
         )
         self.add_shortcut(
+            'open_folder',
+            'Ctrl+Shift+O',
+            common_events.open_folder,
+            'Open a file.'
+        )
+        self.add_shortcut(
             'run_code',
             'Ctrl+Return',
             common_events.run_code,
             'Run active tab code.'
+        )
+        self.add_shortcut(
+            'open_terminal',
+            'Ctrl+`',
+            common_events.show_terminal,
+            'Show the terminal.'
         )
 
 
