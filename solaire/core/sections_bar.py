@@ -25,22 +25,22 @@ class SectionsBar(QtWidgets.QWidget):
         self.btn_explorer.setIcon(explorer_icon)
         self.btn_explorer.setToolTip('Explorer')
 
-        self.btn_plugin = QtWidgets.QPushButton('')
-        plugin_icon = QtGui.QIcon(solaire.core.resources.ICON_PLUGIN.as_posix())
-        self.btn_plugin.setIcon(plugin_icon)
-        self.btn_plugin.setToolTip('Plugins')
-
         self.btn_structure = QtWidgets.QPushButton('')
         structure_icon = QtGui.QIcon(solaire.core.resources.ICON_STRUCTURE.as_posix())
         self.btn_structure.setIcon(structure_icon)
         self.btn_structure.setToolTip('Code Structure')
 
+        self.btn_plugin = QtWidgets.QPushButton('')
+        plugin_icon = QtGui.QIcon(solaire.core.resources.ICON_PLUGIN.as_posix())
+        self.btn_plugin.setIcon(plugin_icon)
+        self.btn_plugin.setToolTip('Plugins')
+
     def _create_layout(self) -> None:
         self.setLayout(self.layout)
 
         self.layout.addWidget(self.btn_explorer)
-        self.layout.addWidget(self.btn_plugin)
         self.layout.addWidget(self.btn_structure)
+        self.layout.addWidget(self.btn_plugin)
         self.layout.addStretch()
 
     def _create_connections(self) -> None:

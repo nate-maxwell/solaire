@@ -178,7 +178,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             syntax_highlighter(self.document())
         self.highlight_current_line()
 
-        self.setFont(QtGui.QFont('Arial', 12))
+        self.setFont(QtGui.QFont('Courier', 12))
 
     def _create_shortcut_signals(self) -> None:
         self.indented.connect(self.indent)
