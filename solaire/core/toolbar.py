@@ -1,6 +1,7 @@
 from PySide6 import QtWidgets
 from PySide6TK import QtWrappers
 
+from solaire.core import broker
 from solaire.core import shortucts
 
 
@@ -26,14 +27,14 @@ class SolaireToolbar(QtWrappers.Toolbar):
 
     def _file_section(self) -> None:
         menu = self.add_menu('File')
+        self.add_menu_command(menu, 'Open', shortucts.open_file)
+        self.add_menu_command(menu, 'Save', shortucts.save_file)
+        self.add_menu_command(menu, 'Save All', shortucts.save_all)
 
     def _edit_section(self) -> None:
         menu = self.add_menu('Edit')
-        self.add_menu_command(
-            menu,
-            'Shortcuts',
-            shortucts.shortcut_manager.show_editor
-        )
+        manager = shortucts.shortcut_manager
+        self.add_menu_command(menu, 'Shortcuts', manager.show_editor)
 
     def _view_section(self) -> None:
         menu = self.add_menu('View')

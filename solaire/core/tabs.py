@@ -1,32 +1,35 @@
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtCore import Qt, Signal, QPoint
-from PySide6.QtGui import QMouseEvent
-from PySide6.QtWidgets import QTabWidget, QTabBar, QWidget
+from PySide6 import QtCore
+from PySide6 import QtGui
+from PySide6 import QtWidgets
+from PySide6TK import QtWrappers
 
 from solaire.core.code_editor import CodeEditor
+from solaire.core import broker
 
 
-class DraggableTabBar(QTabBar):
+class DraggableTabBar(QtWidgets.QTabBar):
     """Tab bar that supports drag-and-drop reordering"""
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self.setAcceptDrops(True)
-        self.setElideMode(Qt.TextElideMode.ElideRight)
+        self.setElideMode(QtCore.Qt.TextElideMode.ElideRight)
         self.setSelectionBehaviorOnRemove(
-            QTabBar.SelectionBehavior.SelectPreviousTab)
+            QtWidgets.QTabBar.SelectionBehavior.SelectPreviousTab
+        )
         self.setMovable(True)
-        self._drag_start_pos: QPoint = QPoint()
+        self._drag_start_pos: QtCore.QPoint = QtCore.QPoint()
 
-    def mousePressEvent(self, event: QMouseEvent) -> None:
-        if event.button() == Qt.MouseButton.LeftButton:
+    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+        if event.button() == QtCore.Qt.MouseButton.LeftButton:
             self._drag_start_pos = event.pos()
         super().mousePressEvent(event)
 
 
-class EditorTabWidget(QTabWidget):
+class EditorTabWidget(QtWidgets.QTabWidget):
     """
     Tab widget for IDE-style file editing.
 
@@ -37,12 +40,12 @@ class EditorTabWidget(QTabWidget):
         content_modified(int, bool): Emitted when content modified state changes (index, is_modified)
     """
 
-    tab_closed = Signal(int)
-    file_opened = Signal(str)
-    file_saved = Signal(str)
-    content_modified = Signal(int, bool)
+    tab_closed = QtCore.Signal(int)
+    file_opened = QtCore.Signal(str)
+    file_saved = QtCore.Signal(str)
+    content_modified = QtCore.Signal(int, bool)
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
 
         self.setTabBar(DraggableTabBar(self))
@@ -52,17 +55,94 @@ class EditorTabWidget(QTabWidget):
 
         self._file_paths: dict[int, Path] = {}
         self._modified_state: dict[int, bool] = {}
-        self._editor_widgets: dict[int, QWidget] = {}
+        self._editor_widgets: dict[int, QtWidgets.QWidget] = {}
 
         self.tabCloseRequested.connect(self._handle_tab_close)
 
-        self.open_file(Path(__file__), CodeEditor(parent=self))
+        self._register_subscriptions()
+
+    def _register_subscriptions(self) -> None:
+        """Registers all subscriptions with the broker."""
+
+        # -----File Opened-----
+
+        broker.register_subscriber(
+            'shortcut_manager',
+            'open_file',
+            self._file_opened_subscription
+        )
+        broker.register_subscriber(
+            'solaire_file_tree',
+            'file_opened',
+            self._file_opened_subscription
+        )
+
+        # -----Directory Changed-----
+
+        broker.register_subscriber(
+            'shortcut_manager',
+            'directory_changed',
+            self._directory_changed_subscription
+        )
+
+        # -----File Saved-----
+        broker.register_subscriber(
+            'shortcut_manager',
+            'save_file',
+            self._save_file_subscription
+        )
+
+        # -----Save All-----
+        broker.register_subscriber(
+            'shortcut_manager',
+            'save_all',
+            self._save_all_subscription
+        )
+
+    def _file_opened_subscription(self, event: broker.Event) -> None:
+        """When a file open has been signaled by the broker."""
+        filepath = Path(event.data)
+        if not filepath.exists():
+            return
+
+        if filepath.suffix == '.py' or filepath.suffix == '.pyw':
+            highlighter = QtWrappers.PythonHighlighter
+        elif filepath.suffix == '.json':
+            highlighter = QtWrappers.JsonHighlighter
+        else:
+            highlighter = None
+
+        editor = CodeEditor(self, highlighter)
+        self.open_file(filepath, editor)
+
+    def _directory_changed_subscription(self, _: broker.Event) -> None:
+        """When a directory change has been signaled by the broker."""
+        while self.count() > 0:
+            self.removeTab(0)
+
+    def _save_file_subscription(self, _: broker.Event) -> None:
+        """When a file save has been signaled by the broker."""
+        self.save_file()
+
+    def _save_all_subscription(self, _: broker.Event) -> None:
+        """When a save-all event has been signaled by the broker."""
+        for i in range(self.count()):
+            self.save_file(i)
+
+    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+        if event.button() == QtCore.Qt.MouseButton.MiddleButton:
+            for i in range(self.count()):
+                if self.tabBar().tabRect(i).contains(event.pos()):
+                    self.removeTab(i)
+                    event.accept()
+                    return
+
+        super().mousePressEvent(event)
 
     def add_editor_tab(
             self,
-            editor_widget: QWidget,
-            file_path: Optional[Path] = None,
-            title: Optional[str] = None
+            editor_widget: QtWidgets.QPlainTextEdit,
+            file_path: Optional[Path] = None
     ) -> int:
         """
         Add a new tab with an editor widget.
@@ -70,54 +150,44 @@ class EditorTabWidget(QTabWidget):
         Args:
             editor_widget: The QPlainTextEdit or custom editor widget
             file_path: Optional path to the file being edited
-            title: Optional tab title (defaults to "Untitled" or filename)
+            title: Optional tab title (defaults to 'Untitled' or filename)
 
         Returns:
             int: Index of the newly added tab
         """
-        if title is None:
-            if file_path:
-                title = file_path.name
-            else:
-                title = "Untitled"
-
+        title = 'Untitled' if file_path is None else file_path.name
         index: int = self.addTab(editor_widget, title)
 
-        if file_path:
+        if file_path is not None:
             self._file_paths[index] = file_path
 
         self._editor_widgets[index] = editor_widget
-
         self._modified_state[index] = False
 
-        if hasattr(editor_widget, 'document') and hasattr(
-                editor_widget.document(), 'modificationChanged'):
-            editor_widget.document().modificationChanged.connect(
-                lambda modified,
-                       widget=editor_widget: self._on_modification_changed(
-                    widget, modified)
+        editor_widget.document().modificationChanged.connect(
+            lambda modified, widget=editor_widget: self._on_modification_changed(
+                widget, modified
             )
-        elif hasattr(editor_widget, 'modificationChanged'):
-            editor_widget.modificationChanged.connect(
-                lambda modified,
-                       widget=editor_widget: self._on_modification_changed(
-                    widget, modified)
+        )
+        editor_widget.modificationChanged.connect(
+            lambda modified, widget=editor_widget: self._on_modification_changed(
+                widget, modified
             )
-        elif hasattr(editor_widget, 'textChanged'):
-            editor_widget.textChanged.connect(
-                lambda widget=editor_widget: self._on_text_changed(widget)
-            )
+        )
+        editor_widget.textChanged.connect(
+            lambda widget=editor_widget: self._on_text_changed(widget)
+        )
 
         self.setCurrentIndex(index)
         return index
 
-    def _on_text_changed(self, editor_widget: QWidget) -> None:
+    def _on_text_changed(self, editor_widget: QtWidgets.QWidget) -> None:
         """Handle text changed event from an editor widget (fallback for widgets without modificationChanged)"""
         index: int = self._get_widget_index(editor_widget)
         if index >= 0:
             self._mark_modified(index)
 
-    def _on_modification_changed(self, editor_widget: QWidget,
+    def _on_modification_changed(self, editor_widget: QtWidgets.QWidget,
                                  modified: bool) -> None:
         """Handle modification changed event from an editor widget"""
         index: int = self._get_widget_index(editor_widget)
@@ -127,21 +197,24 @@ class EditorTabWidget(QTabWidget):
             else:
                 self._mark_unmodified(index)
 
-    def _get_widget_index(self, widget: QWidget) -> int:
+    def _get_widget_index(self, widget: QtWidgets.QWidget) -> int:
         """Find the tab index for a given widget"""
         for index, stored_widget in self._editor_widgets.items():
             if stored_widget is widget:
                 return index
         return -1
 
-    def open_file(self, file_path: Path, editor_widget: QWidget) -> int:
+    def open_file(
+            self,
+            file_path: Path,
+            editor_widget: QtWidgets.QPlainTextEdit
+    ) -> int:
         """
         Open a file in a new tab.
 
         Args:
             file_path: Path to the file to open
             editor_widget: The editor widget to use for this file
-
         Returns:
             int: Index of the tab, or -1 if file couldn't be opened
         """
@@ -149,44 +222,31 @@ class EditorTabWidget(QTabWidget):
             with open(file_path, 'r', encoding='utf-8') as f:
                 content: str = f.read()
 
-            filename: str = file_path.name
-            index: int = self.add_editor_tab(editor_widget, file_path,
-                                             filename)
+            index: int = self.add_editor_tab(
+                editor_widget, file_path
+            )
 
-            if hasattr(editor_widget, 'document') and hasattr(
-                    editor_widget.document(), 'modificationChanged'):
-                editor_widget.document().modificationChanged.disconnect()
-            elif hasattr(editor_widget, 'modificationChanged'):
-                editor_widget.modificationChanged.disconnect()
-            elif hasattr(editor_widget, 'textChanged'):
-                editor_widget.textChanged.disconnect()
+            editor_widget.document().modificationChanged.disconnect()
+            editor_widget.modificationChanged.disconnect()
+            editor_widget.textChanged.disconnect()
 
-            if hasattr(editor_widget, 'setPlainText'):
-                editor_widget.setPlainText(content)
-            elif hasattr(editor_widget, 'setText'):
-                editor_widget.setText(content)
+            editor_widget.setPlainText(content)
 
-            if hasattr(editor_widget, 'document') and hasattr(
-                    editor_widget.document(), 'modificationChanged'):
-                editor_widget.document().modificationChanged.connect(
-                    lambda modified,
-                           widget=editor_widget: self._on_modification_changed(
-                        widget, modified)
+            editor_widget.document().modificationChanged.connect(
+                lambda modified, widget=editor_widget: self._on_modification_changed(
+                    widget, modified
                 )
-            elif hasattr(editor_widget, 'modificationChanged'):
-                editor_widget.modificationChanged.connect(
-                    lambda modified,
-                           widget=editor_widget: self._on_modification_changed(
-                        widget, modified)
+            )
+            editor_widget.modificationChanged.connect(
+                lambda modified, widget=editor_widget: self._on_modification_changed(
+                    widget, modified
                 )
-            elif hasattr(editor_widget, 'textChanged'):
-                editor_widget.textChanged.connect(
-                    lambda widget=editor_widget: self._on_text_changed(widget)
-                )
+            )
+            editor_widget.textChanged.connect(
+                lambda widget=editor_widget: self._on_text_changed(widget)
+            )
 
-            if hasattr(editor_widget, 'document') and hasattr(
-                    editor_widget.document(), 'setModified'):
-                editor_widget.document().setModified(False)
+            editor_widget.document().setModified(False)
 
             self._modified_state[index] = False
             self._update_tab_title(index)
@@ -195,7 +255,7 @@ class EditorTabWidget(QTabWidget):
             return index
 
         except Exception as e:
-            print(f"Error opening file {file_path.as_posix()}: {e}")
+            print(f'Error opening file {file_path.as_posix()}: {e}')
             return -1
 
     def save_file(self, index: Optional[int] = None) -> bool:
@@ -204,7 +264,6 @@ class EditorTabWidget(QTabWidget):
 
         Args:
             index: Tab index to save (None = current tab)
-
         Returns:
             bool: True if saved successfully, False otherwise
         """
@@ -216,21 +275,16 @@ class EditorTabWidget(QTabWidget):
 
         file_path: Optional[Path] = self._file_paths.get(index)
         if not file_path:
-            print(f"No file path associated with tab {index}")
+            print(f'No file path associated with tab {index}')
             return False
 
-        editor_widget: Optional[QWidget] = self.widget(index)
+        editor_widget: Optional[QtWidgets.QWidget] = self.widget(index)
         if not editor_widget:
             return False
 
         content: Optional[str] = None
         if hasattr(editor_widget, 'toPlainText'):
             content = editor_widget.toPlainText()
-        elif hasattr(editor_widget, 'text'):
-            content = editor_widget.text()
-        else:
-            print(f"Editor widget has no text getter method")
-            return False
 
         try:
             with open(file_path, 'w', encoding='utf-8') as f:
@@ -246,7 +300,7 @@ class EditorTabWidget(QTabWidget):
             return True
 
         except Exception as e:
-            print(f"Error saving file {file_path.as_posix()}: {e}")
+            print(f'Error saving file {file_path.as_posix()}: {e}')
             return False
 
     def _mark_modified(self, index: int) -> None:
@@ -267,11 +321,11 @@ class EditorTabWidget(QTabWidget):
         """Update tab title to reflect modified state"""
         current_title: str = self.tabText(index)
 
-        if current_title.startswith("* "):
+        if current_title.startswith('* '):
             current_title = current_title[2:]
 
         if self._modified_state.get(index, False):
-            self.setTabText(index, f"* {current_title}")
+            self.setTabText(index, f'* {current_title}')
         else:
             self.setTabText(index, current_title)
 
@@ -293,7 +347,7 @@ class EditorTabWidget(QTabWidget):
         """Reindex tracking dictionaries after tab removal"""
         new_file_paths: dict[int, Path] = {}
         new_modified_state: dict[int, bool] = {}
-        new_editor_widgets: dict[int, QWidget] = {}
+        new_editor_widgets: dict[int, QtWidgets.QWidget] = {}
 
         for idx in sorted(self._file_paths.keys()):
             if idx < removed_index:
@@ -341,6 +395,6 @@ class EditorTabWidget(QTabWidget):
 
             is_modified: bool = self._modified_state.get(index, False)
             if is_modified:
-                self.setTabText(index, f"* {filename}")
+                self.setTabText(index, f'* {filename}')
             else:
                 self.setTabText(index, filename)

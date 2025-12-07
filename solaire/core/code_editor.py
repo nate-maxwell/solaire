@@ -152,7 +152,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
     def __init__(
             self,
             parent: Optional[QtWidgets.QWidget] = None,
-            syntax_highlighter: SyntaxHighlighter = PythonHighlighter
+            syntax_highlighter: Optional[SyntaxHighlighter] = PythonHighlighter
     ) -> None:
         super(CodeEditor, self).__init__(parent)
 
@@ -172,7 +172,8 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self._create_connections()
         self.update_line_number_area_width(0)
 
-        syntax_highlighter(self.document())
+        if syntax_highlighter is not None:
+            syntax_highlighter(self.document())
         self.highlight_current_line()
 
     def _create_shortcut_signals(self) -> None:

@@ -55,7 +55,7 @@ class SolaireClientWidget(QtWidgets.QWidget):
             self.toggle_explorer_visibility
         )
 
-    def toggle_explorer_visibility(self, e: broker.Event) -> None:
+    def toggle_explorer_visibility(self, _: broker.Event) -> None:
         self.file_explorer.setVisible(not self.file_explorer.isVisible())
 
 
