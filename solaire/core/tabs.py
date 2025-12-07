@@ -37,7 +37,8 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         tab_closed(int): Emitted when a tab is closed with the tab index
         file_opened(str): Emitted when a file is opened with the file path
         file_saved(str): Emitted when a file is saved with the file path
-        content_modified(int, bool): Emitted when content modified state changes (index, is_modified)
+        content_modified(int, bool): Emitted when content modified state
+            changes (index, is_modified)
     """
 
     tab_closed = QtCore.Signal(int)
@@ -47,6 +48,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
 
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
+        broker.register_source('tab_manager')
 
         self.setTabBar(DraggableTabBar(self))
         self.setTabsClosable(True)
@@ -55,9 +57,10 @@ class EditorTabWidget(QtWidgets.QTabWidget):
 
         self._file_paths: dict[int, Path] = {}
         self._modified_state: dict[int, bool] = {}
-        self._editor_widgets: dict[int, QtWidgets.QWidget] = {}
+        self._editor_widgets: dict[int, CodeEditor] = {}
 
         self.tabCloseRequested.connect(self._handle_tab_close)
+        self.currentChanged.connect(self.on_tab_changed)
 
         self._register_subscriptions()
 
@@ -99,6 +102,19 @@ class EditorTabWidget(QtWidgets.QTabWidget):
             self._save_all_subscription
         )
 
+    def on_tab_changed(self, index: int) -> None:
+        try:
+            editor_widget = self._editor_widgets[index]
+        except KeyError:
+            return
+
+        event = broker.Event(
+            'tab_manager',
+            'active_changed',
+            editor_widget.toPlainText()
+        )
+        broker.emit(event)
+
     def _file_opened_subscription(self, event: broker.Event) -> None:
         """When a file open has been signaled by the broker."""
         filepath = Path(event.data)
@@ -113,7 +129,8 @@ class EditorTabWidget(QtWidgets.QTabWidget):
             highlighter = None
 
         editor = CodeEditor(self, highlighter)
-        self.open_file(filepath, editor)
+        new_idx = self.open_file(filepath, editor)
+        self.on_tab_changed(new_idx)
 
     def _directory_changed_subscription(self, _: broker.Event) -> None:
         """When a directory change has been signaled by the broker."""
@@ -141,17 +158,15 @@ class EditorTabWidget(QtWidgets.QTabWidget):
 
     def add_editor_tab(
             self,
-            editor_widget: QtWidgets.QPlainTextEdit,
+            editor_widget: CodeEditor,
             file_path: Optional[Path] = None
     ) -> int:
         """
         Add a new tab with an editor widget.
 
         Args:
-            editor_widget: The QPlainTextEdit or custom editor widget
-            file_path: Optional path to the file being edited
-            title: Optional tab title (defaults to 'Untitled' or filename)
-
+            editor_widget (QPlainTextEdit): The QPlainTextEdit or custom editor widget
+            file_path (Path): Optional path to the file being edited
         Returns:
             int: Index of the newly added tab
         """
@@ -213,10 +228,11 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         Open a file in a new tab.
 
         Args:
-            file_path: Path to the file to open
-            editor_widget: The editor widget to use for this file
+            file_path (Path): Path to the file to open.
+            editor_widget (QPlainTextEdit): The editor widget to use for this
+                file.
         Returns:
-            int: Index of the tab, or -1 if file couldn't be opened
+            int: Index of the tab, or -1 if file couldn't be opened.
         """
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
@@ -263,9 +279,9 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         Save the file in the specified tab (or current tab if not specified).
 
         Args:
-            index: Tab index to save (None = current tab)
+            index (int): Tab index to save (None = current tab).
         Returns:
-            bool: True if saved successfully, False otherwise
+            bool: True if saved successfully, False otherwise.
         """
         if index is None:
             index = self.currentIndex()

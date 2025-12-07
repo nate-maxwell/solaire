@@ -1,69 +1,51 @@
-"""
-PySide6 File Tree Widget for Code IDE.
-A comprehensive file browser with icons, context menus, and file filtering.
-"""
-
-
-from pathlib import Path
 from typing import Optional
 
+from PySide6 import QtCore
 from PySide6 import QtWidgets
-from PySide6TK import QtWrappers
 
 from solaire.core import broker
+from solaire.core import file_explorer
+from solaire.core import structure_explorer
 
 
-class SolaireFileTree(QtWidgets.QWidget):
-    def __init__(self, parent: Optional[QtWidgets.QWidget]) -> None:
+class ExplorerWidget(QtWidgets.QWidget):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
 
         self._create_widgets()
         self._create_layout()
-        self._create_connections()
-
-        broker.register_source('solaire_file_tree')
+        self._create_subscriptions()
 
     def _create_widgets(self) -> None:
         self.layout_main = QtWidgets.QVBoxLayout()
+        self.layout_main.setContentsMargins(0, 0, 0, 0)
+        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
 
-        self.lbl_header = QtWidgets.QLabel('Explorer')
-
-        temp_path = Path(__file__).parent.parent.parent
-        self.file_tree = QtWrappers.FileTreeWidget(temp_path, self)
+        self.file_explorer = file_explorer.SolaireFileTree(self)
+        self.structure_explorer = structure_explorer.CodeStructureWidget(self)
+        self.structure_explorer.setVisible(False)
 
     def _create_layout(self) -> None:
+        self.splitter.addWidget(self.file_explorer)
+        self.splitter.addWidget(self.structure_explorer)
+
         self.setLayout(self.layout_main)
-        self.layout_main.addWidget(self.lbl_header)
-        self.layout_main.addWidget(self.file_tree)
+        self.layout_main.addWidget(self.splitter)
 
-    def _create_connections(self) -> None:
-        self.file_tree.file_opened.connect(lambda path: file_opened(path))
-        self.file_tree.file_selected.connect(lambda path: file_selected(path))
-        self.file_tree.directory_changed.connect(lambda path: directory_changed(path))
+    def _create_subscriptions(self) -> None:
+        broker.register_subscriber(
+            'sections_bar',
+            'toggle_explorer',
+            self.toggle_file_explorer_visibility
+        )
+        broker.register_subscriber(
+            'sections_bar',
+            'toggle_structure',
+            self.toggle_structure_explorer_visibility
+        )
 
+    def toggle_file_explorer_visibility(self, _: broker.Event) -> None:
+        self.file_explorer.setVisible(not self.file_explorer.isVisible())
 
-def file_opened(path: str) -> None:
-    event = broker.Event(
-        source='solaire_file_tree',
-        name='file_opened',
-        data=Path(path)
-    )
-    broker.emit(event)
-
-
-def file_selected(path: str) -> None:
-    event = broker.Event(
-        source='solaire_file_tree',
-        name='file_selected',
-        data=Path(path)
-    )
-    broker.emit(event)
-
-
-def directory_changed(path: str) -> None:
-    event = broker.Event(
-        source='solaire_file_tree',
-        name='directory_changed',
-        data=Path(path)
-    )
-    broker.emit(event)
+    def toggle_structure_explorer_visibility(self, _: broker.Event) -> None:
+        self.structure_explorer.setVisible(not self.structure_explorer.isVisible())

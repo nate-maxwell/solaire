@@ -12,13 +12,14 @@ from typing import Optional
 from typing import Type
 from typing import TypeVar
 
+import PySide6TK.text
 from PySide6 import QtCore
 from PySide6 import QtGui
 from PySide6 import QtWidgets
-
-import PySide6TK.text
-from PySide6TK.QtWrappers import PythonHighlighter
 from PySide6TK.QtWrappers import CodeMiniMap
+from PySide6TK.QtWrappers import PythonHighlighter
+
+from solaire.core import broker
 
 
 T_Highlighter = TypeVar('T_Highlighter', bound=QtGui.QSyntaxHighlighter)
@@ -170,6 +171,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
 
         self._create_shortcut_signals()
         self._create_connections()
+        self._create_subscriptions()
         self.update_line_number_area_width(0)
 
         if syntax_highlighter is not None:
@@ -187,6 +189,13 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self.updateRequest.connect(self.update_line_number_area)
         self.cursorPositionChanged.connect(self.highlight_current_line)
         self.textChanged.connect(self.analyze_fold_regions)
+
+    def _create_subscriptions(self) -> None:
+        broker.register_subscriber(
+            'structure_explorer',
+            'item_clicked',
+            lambda event: self.jump_to_line(event.data)
+        )
 
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
         super().resizeEvent(event)
@@ -224,6 +233,18 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
 
         self.line_number_area.raise_()
         self.fold_area.raise_()
+
+    def jump_to_line(self, line_number: int) -> None:
+        """Jump to a specific line in the editor."""
+        cursor = self.textCursor()
+        cursor.movePosition(cursor.MoveOperation.Start)
+        cursor.movePosition(
+            cursor.MoveOperation.Down,
+            cursor.MoveMode.MoveAnchor,
+            line_number - 1
+        )
+        self.setTextCursor(cursor)
+        self.setFocus()
 
     # -----Line Numbers--------------------------------------------------------
 
@@ -429,7 +450,8 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
 
         block = self.firstVisibleBlock()
         blockNumber = block.blockNumber()
-        top = self.blockBoundingGeometry(block).translated(self.contentOffset()).top()
+        block_geo = self.blockBoundingGeometry(block)
+        top = block_geo.translated(self.contentOffset()).top()
         bottom = top + self.blockBoundingRect(block).height()
 
         height = self.fontMetrics().height()
@@ -534,7 +556,6 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
 
         Args:
             lines (range): Range of line numbers to check.
-
         Returns:
             bool: True if all lines start with comment prefix, False otherwise.
         """

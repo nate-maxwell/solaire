@@ -20,27 +20,41 @@ class SectionsBar(QtWidgets.QWidget):
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
 
-        self.explorer_button = QtWidgets.QPushButton('')
+        self.btn_explorer = QtWidgets.QPushButton('')
         explorer_icon = QtGui.QIcon(solaire.core.resources.ICON_FOLDER.as_posix())
-        self.explorer_button.setIcon(explorer_icon)
-        self.explorer_button.setToolTip('Explorer')
+        self.btn_explorer.setIcon(explorer_icon)
+        self.btn_explorer.setToolTip('Explorer')
 
-        self.plugin_button = QtWidgets.QPushButton('')
+        self.btn_plugin = QtWidgets.QPushButton('')
         plugin_icon = QtGui.QIcon(solaire.core.resources.ICON_PLUGIN.as_posix())
-        self.plugin_button.setIcon(plugin_icon)
-        self.plugin_button.setToolTip('Plugins')
+        self.btn_plugin.setIcon(plugin_icon)
+        self.btn_plugin.setToolTip('Plugins')
+
+        self.btn_structure = QtWidgets.QPushButton('')
+        structure_icon = QtGui.QIcon(solaire.core.resources.ICON_STRUCTURE.as_posix())
+        self.btn_structure.setIcon(structure_icon)
+        self.btn_structure.setToolTip('Code Structure')
 
     def _create_layout(self) -> None:
         self.setLayout(self.layout)
 
-        self.layout.addWidget(self.explorer_button)
-        self.layout.addWidget(self.plugin_button)
+        self.layout.addWidget(self.btn_explorer)
+        self.layout.addWidget(self.btn_plugin)
+        self.layout.addWidget(self.btn_structure)
         self.layout.addStretch()
 
     def _create_connections(self) -> None:
-        self.explorer_button.clicked.connect(toggle_explorer)
+        self.btn_explorer.clicked.connect(toggle_explorer)
+        self.btn_structure.clicked.connect(toggle_structure)
 
 
 def toggle_explorer() -> None:
+    """Signal to toggle visibility on file explorer."""
     event = broker.Event('sections_bar', 'toggle_explorer')
+    broker.emit(event)
+
+
+def toggle_structure() -> None:
+    """Signal to toggle visibility on structure explorer."""
+    event = broker.Event('sections_bar', 'toggle_structure')
     broker.emit(event)
