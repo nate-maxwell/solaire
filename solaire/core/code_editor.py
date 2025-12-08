@@ -189,7 +189,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
     def _create_connections(self) -> None:
         self.blockCountChanged.connect(self.update_line_number_area_width)
         self.updateRequest.connect(self.update_line_number_area)
-        self.cursorPositionChanged.connect(self.on_cursor_position_changed)
+        self.cursorPositionChanged.connect(self._emit_cursor_position)
 
     def _create_subscriptions(self) -> None:
         broker.register_subscriber(
@@ -251,6 +251,14 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         super().setPlainText(text)
         self.analyze_fold_regions()
 
+    def _create_cursor_timer(self) -> None:
+        self._cursor_timer = QtCore.QTimer(self)
+        self._cursor_timer.setInterval(16)
+        self._cursor_timer.setSingleShot(True)
+        self._cursor_timer.timeout.connect(self._emit_cursor_position)
+
+        self.cursorPositionChanged.connect(self._cursor_timer.start)
+
     # -----Line Numbers--------------------------------------------------------
 
     @property
@@ -276,7 +284,13 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         if vertical_scroll:
             self.line_number_area.scroll(0, vertical_scroll)
             self.fold_area.scroll(0, vertical_scroll)
-            self.minimap.update()
+
+            # Only update minimap when block position changes
+            first_block = self.firstVisibleBlock().blockNumber()
+            if first_block != getattr(self, '_last_minimap_block', -1):
+                self.minimap.update()
+            self._last_minimap_block = first_block
+            return
         else:
             self.line_number_area.update(
                 0,
@@ -529,7 +543,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             bottom = top + self.blockBoundingRect(block).height()
             blockNumber += 1
 
-    def on_cursor_position_changed(self) -> None:
+    def _emit_cursor_position(self) -> None:
         """On cursor position change, update the highlighted line to the new
         current line and emit the new cursor line + col through the broker.
         """
