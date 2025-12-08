@@ -13,6 +13,7 @@ from pathlib import Path
 from PySide6 import QtWidgets
 
 from solaire.core import broker
+from solaire.core import project
 
 
 broker.register_source('common_event')
@@ -62,8 +63,10 @@ def open_folder() -> None:
     if not dir_path:
         return
 
-    event = broker.Event('common_event', 'open_folder', Path(dir_path))
+    new_path = Path(dir_path)
+    event = broker.Event('common_event', 'open_folder', new_path)
     broker.emit(event)
+    project.update_project_path(new_path)
 
 
 def toggle_explorer() -> None:

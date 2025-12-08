@@ -1,11 +1,11 @@
 """
 # Solaire Application Client
 
-* Description:
-
-    The primary application. This includes the Solaire main window, and primary
-    widget housing all window components.
+The primary application. This includes the Solaire main window, and primary
+widget housing all window components.
 """
+
+
 import PySide6TK.shapes
 from PySide6 import QtCore
 from PySide6 import QtWidgets

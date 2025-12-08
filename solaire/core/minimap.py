@@ -1,11 +1,7 @@
 """
-# Code Mini Map
-
-Description:
-
-    A VSCode-like minimap widget for code editors that derive from
-    QPlainTextEdit. Optimized for performance with caching and reduced
-    paint operations.
+A VSCode-like minimap widget for code editors that derive from
+QPlainTextEdit. Optimized for performance with caching and reduced
+paint operations.
 """
 
 

@@ -1,3 +1,9 @@
+"""
+The primary tab manager in the center of the application.
+All tab management is handled here.
+"""
+
+
 from pathlib import Path
 from typing import Optional
 
@@ -76,7 +82,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
 
         broker.register_subscriber(
             'common_event',
-            'directory_changed',
+            'open_folder',
             self._directory_changed_subscription
         )
 

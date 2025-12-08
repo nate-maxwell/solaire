@@ -1,3 +1,8 @@
+"""
+Code structure viewer utilizing Jedi for static analysis.
+Similar to the file viewer but refreshes on tab switching.
+"""
+
 from typing import Optional
 
 import jedi
@@ -9,6 +14,15 @@ from solaire.core import broker
 
 
 class CodeStructureWidget(QtWidgets.QTreeWidget):
+    """A code structure widget used to visualize and navigate the code
+    structure, powered by the Jedi python analyzer.
+
+    Handles Classes, Class Methods, and Functions.
+    Sometimes types from the types or typing modules are added, such as Union
+    or Optional, as they are classes that have been imported.
+
+    Items are added in declared order.
+    """
     line_clicked = QtCore.Signal(int)
 
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:

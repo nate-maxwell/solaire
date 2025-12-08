@@ -1,16 +1,12 @@
 """
-# Event Broker
+Sometimes various widgets within the editor need to be updated of certain
+events, or wish to broadcast state changes to any widget that cares.
 
-* Description:
+PySide's signals are great when widgets have a direct reference to each
+other, but this can create a very messy web of dependencies.
 
-    Sometimes various widgets within the editor need to be updated of certain
-    events, or wish to broadcast state changes to any widget that cares.
-
-    PySide's signals are great when widgets have a direct reference to each
-    other, but this can create a very messy web of dependencies.
-
-    Herein is a basic observer pattern event broker for widgets to broadcast
-    state changes or values to subscribers.
+Herein is a basic observer pattern event broker for widgets to broadcast
+state changes or values to subscribers.
 """
 
 

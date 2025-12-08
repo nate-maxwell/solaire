@@ -1,3 +1,9 @@
+"""
+Project file explorer.
+QtWidget with nested QTreeView.
+"""
+
+
 from typing import Optional
 
 from PySide6 import QtCore
@@ -9,6 +15,10 @@ from solaire.core import structure_explorer
 
 
 class ExplorerWidget(QtWidgets.QWidget):
+    """Project file explorer. Supports creating and saving files and folders.
+    Creating folders will not affect the loaded project directory.
+    """
+
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
 

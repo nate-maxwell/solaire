@@ -1,3 +1,11 @@
+"""
+The toolbar at the top of the application and each of the submenus.
+
+Some menus may not have items in them but are placed as a reminder to fill
+populate them later.
+"""
+
+
 from PySide6 import QtWidgets
 from PySide6TK import QtWrappers
 
@@ -24,13 +32,14 @@ class SolaireToolbar(QtWrappers.Toolbar):
         self._code_section()
         self._tools_section()
         self._preference_section()
+        self._plugins_section()
         self._help_section()
         self._button_section()
 
     def _file_section(self) -> None:
         menu = self.add_menu('File')
         self.add_menu_command(menu, 'Open File', common_events.open_file)
-        self.add_menu_command(menu, 'Open Folder', common_events.open_file)
+        self.add_menu_command(menu, 'Open Folder', common_events.open_folder)
         self.add_menu_command(menu, 'Save', common_events.save_file)
         self.add_menu_command(menu, 'Save All', common_events.save_all)
         self.add_menu_command(menu, 'Quit', QtWidgets.QApplication.quit)
@@ -58,6 +67,9 @@ class SolaireToolbar(QtWrappers.Toolbar):
 
     def _preference_section(self) -> None:
         menu = self.add_menu('Preferences')
+
+    def _plugins_section(self) -> None:
+        menu = self.add_menu('Plugins')
 
     def _help_section(self) -> None:
         menu = self.add_menu('Help')

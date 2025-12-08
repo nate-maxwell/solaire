@@ -1,9 +1,13 @@
+"""
+Shortcut management for the Solaire applications.
+"""
+
+
 from typing import Optional
 
 from PySide6 import QtWidgets
 from PySide6TK import QtWrappers
 
-from solaire.core import broker
 from solaire.core import common_events
 
 

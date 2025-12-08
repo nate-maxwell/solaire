@@ -1,9 +1,6 @@
 """
-# Code Editor
-
-* Description
-
-    A QPlainTextEdit wrapper with numbered lines and syntax highlighting.
+A QPlainTextEdit wrapper with numbered lines and syntax highlighting.
+This is the primary "Editing Engine" of the program.
 """
 
 
