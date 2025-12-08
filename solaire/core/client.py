@@ -6,6 +6,8 @@ widget housing all window components.
 """
 
 
+from typing import Optional
+
 import PySide6TK.shapes
 from PySide6 import QtCore
 from PySide6 import QtWidgets
@@ -55,8 +57,12 @@ class SolaireClientWidget(QtWidgets.QWidget):
 
 
 class SolaireClientWindow(QtWrappers.MainWindow):
-    def __init__(self) -> None:
-        super().__init__('Solaire', icon_path=solaire.core.resources.ICON_PATH)
+    def __init__(self, parent: Optional[QtWidgets.QWidget]) -> None:
+        super().__init__(
+            window_name='Solaire',
+            parent=parent,
+            icon_path=solaire.core.resources.ICON_PATH
+        )
         QtWrappers.set_style(self, QtWrappers.QSS_COMBINEAR)
         shortucts.init_shortcut_manager(self)  # must come before main widget
         broker.register_source('SYSTEM')
