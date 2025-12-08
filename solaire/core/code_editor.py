@@ -191,7 +191,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self.blockCountChanged.connect(self.update_line_number_area_width)
         self.updateRequest.connect(self.update_line_number_area)
         self.cursorPositionChanged.connect(self.on_cursor_position_changed)
-        self.textChanged.connect(self.analyze_fold_regions)
+        self.document().contentsChanged.connect(self.analyze_fold_regions)
 
     def _create_subscriptions(self) -> None:
         broker.register_subscriber(
