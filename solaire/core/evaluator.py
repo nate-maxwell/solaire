@@ -35,21 +35,62 @@ def update_project_path(path: Path) -> None:
     sys.path.insert(0, path.as_posix())
 
 
-def execute_user_code(code: str) -> Optional[str]:
+def _ensure_main_namespace(filename: Optional[Path] = None) -> None:
+    """Ensure the persistent user namespace has __name__ == '__main__' and
+    related dunders.
+    """
+    global _USER_NAMESPACE
+
+    if '__name__' not in _USER_NAMESPACE:
+        _USER_NAMESPACE['__name__'] = '__main__'
+
+    _USER_NAMESPACE.setdefault('__package__', None)
+    if filename is not None:
+        _USER_NAMESPACE['__file__'] = filename.as_posix()
+
+
+def reset_user_namespace() -> None:
+    """Reset the persistent namespace to a clean module-like __main__ state."""
+    global _USER_NAMESPACE
+    _USER_NAMESPACE = {}
+    _ensure_main_namespace()
+
+
+def execute_user_code(
+        code: str,
+        *,
+        filename: Optional[Path] = None,
+        reset: bool = False
+) -> Optional[str]:
     """Execute user code in a persistent namespace that maintains state
     between executions, similar to a Python REPL or Jupyter notebook.
 
     Args:
-        code (str): The Python code to execute
+        code (str): The Python code to execute.
+        filename (Optional[Path]): Pretend file path for better tracebacks and to
+            populate __file__ in the user namespace.
+        reset (bool): If True, reset the namespace before executing.
     Returns:
-        Optional[str]: None if successful, error message string if execution
-            failed.
+        Optional[str]: None if successful; otherwise an error message string.
     """
     global _USER_NAMESPACE
 
     try:
+        if reset:
+            reset_user_namespace()
+
+        # Make sure __name__ == '__main__' and related dunders exist
+        _ensure_main_namespace(filename=filename)
+
+        # Compile with a filename for clearer tracebacks if provided
+        code_obj = compile(
+            code,
+            filename.as_posix() if filename else '<user_code>',
+            'exec'
+        )
+
         # Execute code in the persistent user namespace
-        exec(code, _USER_NAMESPACE)
+        exec(code_obj, _USER_NAMESPACE)
         return None
     except Exception as e:
         # Return the error message for display in the IDE
