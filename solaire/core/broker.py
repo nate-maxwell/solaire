@@ -35,12 +35,10 @@ class Event(object):
     """The payload data - file path, timestamp, etc."""
 
 
-BROKER_CHAN = 'BROKER'
-"""A channel for broker observability and maintenance."""
-INVALID_CHAN = 'INVALID'
-"""A channel for invalid events."""
+BROKER_SOURCE = 'BROKER'
+"""A source for broker observability and maintenance."""
 
-broker_update_event = Event('BROKER', 'UPDATE', None)
+broker_update_event = Event('BROKER', 'UPDATE')
 """An event for when the broker itself is affected, rather than event info
 being forwarded to subscribers.
 """
@@ -57,7 +55,7 @@ _SOURCES: dict[str, _source_dict_type] = {
         'UPDATE': []
     }
 }
-"""The broker's record of each topic name to domain event:subscriber records.
+"""The broker's record of each topic name to event_name:subscriber records.
 
 This is kept outside of the replaced module class to create a protected
 closure around the event topic:subscriber structure.
@@ -74,15 +72,15 @@ closure around the event topic:subscriber structure.
 #       event_name: [subscriber_funcs]
 #   }
 # }
-# dict structure, with topics being the first key, and task names being
-# the keys within a given topic. Task names hold lists of callable
-# subscriber objects that the event is forwarded to.
+# dictionary structure, with topics being the first key, and event names being
+# the keys within a given topic. Event names hold lists of callable subscriber
+# objects that the event is forwarded to.
 
 
 class EventBroker(types.ModuleType):
     """Primary event coordinator."""
 
-    Event = Event
+    Event = Event  # Closure to keep Event type valid at runtime.
 
     def __init__(self, name: str) -> None:
         super().__init__(name)
@@ -90,11 +88,13 @@ class EventBroker(types.ModuleType):
         self._setup_topics()
 
     def _setup_topics(self) -> None:
-        """Setup default topics."""
-        self.register_source(BROKER_CHAN)
-        self.register_source(INVALID_CHAN)
+        """Setup default topics. May grow over time."""
+        self.register_source(BROKER_SOURCE)
 
     def register_source(self, source_name: str) -> None:
+        """Register a source in the broker.
+        Only adds entries if they do not exist.
+        """
         if source_name not in _SOURCES:
             _SOURCES[source_name] = defaultdict(list)
             self.emit(self._broker_update)
@@ -118,7 +118,7 @@ class EventBroker(types.ModuleType):
         source_name = event.source
         if source_name not in _SOURCES:
             raise ValueError(
-                f'{source_name} is not currently tracked by the broker!'
+                f'{source_name} is not currently registered in the broker!'
             )
 
         source = _SOURCES[event.source]
@@ -128,7 +128,7 @@ class EventBroker(types.ModuleType):
             i(event)
 
 
-# This is here to protect the _SOURCES dict.
+# This is here to protect the _SOURCES dict, creating a "protective closure".
 custom_module = EventBroker(sys.modules[__name__].__name__)
 sys.modules[__name__] = custom_module
 
