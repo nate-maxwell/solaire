@@ -171,6 +171,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self._create_shortcut_signals()
         self._create_connections()
         self._create_subscriptions()
+        self._create_fold_analyzer()
         self.update_line_number_area_width(0)
 
         if syntax_highlighter is not None:
@@ -178,8 +179,6 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self.highlight_current_line()
 
         self.setFont(QtGui.QFont('Courier', 12))
-
-        self.analyze_fold_regions()
 
     def _create_shortcut_signals(self) -> None:
         self.indented.connect(self.indent)
@@ -191,7 +190,6 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self.blockCountChanged.connect(self.update_line_number_area_width)
         self.updateRequest.connect(self.update_line_number_area)
         self.cursorPositionChanged.connect(self.on_cursor_position_changed)
-        self.document().contentsChanged.connect(self.analyze_fold_regions)
 
     def _create_subscriptions(self) -> None:
         broker.register_subscriber(
@@ -298,6 +296,17 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             self.update_line_number_area_width(0)
 
     # -----Code Folding--------------------------------------------------------
+
+    def _create_fold_analyzer(self) -> None:
+        self._fold_timer = QtCore.QTimer(self)
+        self._fold_timer.setInterval(300)
+        self._fold_timer.setSingleShot(True)
+        self._fold_timer.timeout.connect(self.analyze_fold_regions)
+
+        # Replace direct connection:
+        self.document().contentsChanged.connect(
+            lambda: self._fold_timer.start()
+        )
 
     def analyze_fold_regions(self) -> None:
         """Analyze document to find foldable regions.
