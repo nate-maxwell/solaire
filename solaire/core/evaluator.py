@@ -31,3 +31,26 @@ def update_project_path(path: Path) -> None:
         raise ValueError(f'New project path does not exist {path}!')
 
     sys.path.insert(0, path.as_posix())
+
+
+def execute_user_code(code: str) -> Optional[str]:
+    """Execute user code in a persistent namespace that maintains state
+    between executions, similar to a Python REPL or Jupyter notebook.
+
+    Args:
+        code (str): The Python code to execute
+    Returns:
+        Optional[str]: None if successful, error message string if execution
+            failed.
+    """
+    global _USER_NAMESPACE
+
+    try:
+        # Execute code in the persistent user namespace
+        exec(code, _USER_NAMESPACE)
+        return None
+    except Exception as e:
+        # Return the error message for display in the IDE
+        error_type = type(e).__name__
+        error_message = str(e)
+        return f'{error_type}: {error_message}'
