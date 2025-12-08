@@ -57,7 +57,7 @@ class SolaireClientWidget(QtWidgets.QWidget):
 
 
 class SolaireClientWindow(QtWrappers.MainWindow):
-    def __init__(self, parent: Optional[QtWidgets.QWidget]) -> None:
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(
             window_name='Solaire',
             parent=parent,
