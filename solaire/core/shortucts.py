@@ -49,7 +49,7 @@ class ShortcutManager(QtWrappers.KeyShortcutManager):
             'Run active tab code.'
         )
         self.add_shortcut(
-            'run_code',
+            'run_code_alt',
             'Ctrl+Enter',
             common_events.run_code,
             'Run active tab code.'

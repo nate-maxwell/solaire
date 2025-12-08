@@ -18,7 +18,9 @@ _INITIAL_MODULES: set[str] = set(sys.modules.keys())
 
 
 def update_project_path(path: Path) -> None:
-    """Update the project path and add it to sys.path."""
+    """Update the project path and add it to sys.path.
+    This will remove the previous project path, if it was valid.
+    """
     global _PROJECT_PATH
 
     # Remove old project path if it exists

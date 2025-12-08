@@ -179,6 +179,8 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
 
         self.setFont(QtGui.QFont('Courier', 12))
 
+        self.analyze_fold_regions()
+
     def _create_shortcut_signals(self) -> None:
         self.indented.connect(self.indent)
         self.unindented.connect(self.unindent)
@@ -247,6 +249,10 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self.setTextCursor(cursor)
         self.setFocus()
 
+    def setPlainText(self, text, /) -> None:
+        super().setPlainText(text)
+        self.analyze_fold_regions()
+
     # -----Line Numbers--------------------------------------------------------
 
     @property
@@ -295,22 +301,29 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
 
     def analyze_fold_regions(self) -> None:
         """Analyze document to find foldable regions.
-        For Python: looks for lines ending with ':' and their indented blocks.
+
+        Supports:
+            - Python indentation blocks (lines ending with ':')
+            - Brace blocks     { ... }
+            - Bracket blocks   [ ... ]
+            - Paren blocks     ( ... )
         """
         self._fold_regions.clear()
+        self._analyze_colon_blocks()
+        self._analyze_paired_char_blocks()
+
+    def _analyze_colon_blocks(self) -> None:
+        # ---------- PYTHON ':' BLOCK FOLDING ----------
         doc = self.document()
         block = doc.firstBlock()
-
         while block.isValid():
             text = block.text()
             stripped = text.lstrip()
 
-            # Check if this line starts a foldable region (ends with ':')
             if stripped and stripped.rstrip().endswith(':'):
                 start_block = block.blockNumber()
                 indent_level = len(text) - len(stripped)
 
-                # Find the end of this indented block
                 next_block = block.next()
                 end_block = start_block
 
@@ -318,27 +331,56 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
                     next_text = next_block.text()
                     next_stripped = next_text.lstrip()
 
-                    # Skip empty lines
                     if not next_stripped:
                         next_block = next_block.next()
                         continue
 
                     next_indent = len(next_text) - len(next_stripped)
-
-                    # If indentation decreased or same, we've left the block
                     if next_indent <= indent_level:
                         break
 
                     end_block = next_block.blockNumber()
                     next_block = next_block.next()
 
-                # Only create fold region if there are indented lines
                 if end_block > start_block:
                     self._fold_regions[start_block] = _FoldRegion(
                         start_block=start_block,
                         end_block=end_block,
                         is_folded=False
                     )
+
+            block = block.next()
+
+    def _analyze_paired_char_blocks(self) -> None:
+        # ---------- BRACE / BRACKET / PAREN MATCHING ----------
+        doc = self.document()
+        opening_tokens = {'{': '}', '[': ']', '(': ')'}
+        stack = []  # (opening_char, block_number)
+
+        block = doc.firstBlock()
+        while block.isValid():
+            text = block.text().rstrip()
+
+            for i, ch in enumerate(text):
+                if ch in opening_tokens:
+                    # Opening symbol
+                    stack.append((ch, block.blockNumber()))
+                elif ch in opening_tokens.values():
+                    # Closing symbol — match most recent open
+                    if stack:
+                        open_ch, open_block = stack[-1]
+                        if opening_tokens[open_ch] == ch:
+                            stack.pop()
+                            close_block = block.blockNumber()
+
+                            if close_block > open_block:
+                                # Register fold region
+                                # (Python ':' region may already exist — overwrite safely)
+                                self._fold_regions[open_block] = _FoldRegion(
+                                    start_block=open_block,
+                                    end_block=close_block,
+                                    is_folded=False
+                                )
 
             block = block.next()
 
@@ -424,7 +466,11 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
                     painter.drawPolygon(triangle)
 
             block = block.next()
-            top = bottom
+            if not block.isValid():
+                break
+
+            block_geo = self.blockBoundingGeometry(block)
+            top = block_geo.translated(self.contentOffset()).top()
             bottom = top + self.blockBoundingRect(block).height()
             block_number += 1
 
