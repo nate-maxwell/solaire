@@ -713,24 +713,22 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             self.insertPlainText(_INDENT)
             return
 
-        # Enter indentation preservation.
+        # Enter indentation handling (preserve current indent; if line ends with ':', indent one extra level).
         if event.key() in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter):
-            # This is rather primitive - it checks there are any number of
-            # spaces preceding the cursor and then newlines to that column.
-            # More complex indenting requires knowledge of the written
-            # language's grammars.
-
             cursor = self.textCursor()
             cursor.select(QtGui.QTextCursor.SelectionType.LineUnderCursor)
             current_line = cursor.selectedText()
 
-            # Count leading spaces
-            indent_count = len(current_line) - len(current_line.lstrip(' '))
-            indent = ' ' * indent_count
+            # Base indent equals current line's leading spaces
+            base_indent_count = len(current_line) - len(current_line.lstrip(' '))
+            base_indent = ' ' * base_indent_count
 
-            # Insert newline and indentation
+            # If the logical line ends with a colon, indent to the next level
+            extra = _INDENT if current_line.rstrip().endswith(':') else ''
+
+            # Insert newline via parent, then insert computed indentation
             super(CodeEditor, self).keyPressEvent(event)
-            self.insertPlainText(indent)
+            self.insertPlainText(base_indent + extra)
             return
 
         super(CodeEditor, self).keyPressEvent(event)
