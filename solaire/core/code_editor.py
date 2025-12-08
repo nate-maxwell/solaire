@@ -189,7 +189,6 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
     def _create_connections(self) -> None:
         self.blockCountChanged.connect(self.update_line_number_area_width)
         self.updateRequest.connect(self.update_line_number_area)
-        self.cursorPositionChanged.connect(self._emit_cursor_position)
 
     def _create_subscriptions(self) -> None:
         broker.register_subscriber(
