@@ -18,7 +18,9 @@ abouts = [about_1, about_2]
 
 
 class AboutWidget(QtWidgets.QMainWindow):
-    """Simple widget showing the about-info of the editor."""
+    """Simple widget showing the about-info of the editor.
+    Includes a link to the code repo and documentation.
+    """
 
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
