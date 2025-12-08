@@ -172,6 +172,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self._create_connections()
         self._create_subscriptions()
         self._create_fold_analyzer()
+        self._create_cursor_timer()
         self.update_line_number_area_width(0)
 
         if syntax_highlighter is not None:
