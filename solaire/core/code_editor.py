@@ -1,6 +1,8 @@
 """
 A QPlainTextEdit wrapper with numbered lines and syntax highlighting.
 This is the primary "Editing Engine" of the program.
+
+Uses a regex syntax highlighter.
 """
 
 
