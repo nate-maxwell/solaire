@@ -4,7 +4,9 @@ All tab management is handled here.
 """
 
 
+import time
 from pathlib import Path
+from typing import cast
 from typing import Optional
 
 from PySide6 import QtCore
@@ -14,6 +16,7 @@ from PySide6TK import QtWrappers
 
 from solaire.core.code_editor import CodeEditor
 from solaire.core import broker
+from solaire.core import evaluator
 
 
 class DraggableTabBar(QtWidgets.QTabBar):
@@ -108,7 +111,18 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         )
 
     def run_code(self, _: broker.Event) -> None:
-        print('Running code...')
+        editor: CodeEditor = cast(CodeEditor, self.currentWidget())
+        code = editor.toPlainText()
+
+        before = time.perf_counter()
+        result: Optional[str] = evaluator.execute_user_code(code)
+        after = time.perf_counter()
+        elapsed = after - before
+        elapsed_str = f'Executed in {elapsed:.3f} seconds.'
+        print(elapsed_str)
+
+        if result is not None:
+            print(result)
 
     def _file_opened_subscription(self, event: broker.Event) -> None:
         """When a file open has been signaled by the broker."""

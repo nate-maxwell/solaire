@@ -13,7 +13,7 @@ from pathlib import Path
 from PySide6 import QtWidgets
 
 from solaire.core import broker
-from solaire.core import project
+from solaire.core import evaluator
 
 
 broker.register_source('common_event')
@@ -66,7 +66,7 @@ def open_folder() -> None:
     new_path = Path(dir_path)
     event = broker.Event('common_event', 'open_folder', new_path)
     broker.emit(event)
-    project.update_project_path(new_path)
+    evaluator.update_project_path(new_path)
 
 
 def toggle_explorer() -> None:
@@ -88,5 +88,5 @@ def show_terminal() -> None:
 
 def run_code() -> None:
     """Run the active file's code. Emits None."""
-    event = broker.Event('SYSTEM', 'RUN', None)
+    event = broker.Event('SYSTEM', 'RUN')
     broker.emit(event)

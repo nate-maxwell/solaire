@@ -49,6 +49,12 @@ class ShortcutManager(QtWrappers.KeyShortcutManager):
             'Run active tab code.'
         )
         self.add_shortcut(
+            'run_code',
+            'Ctrl+Enter',
+            common_events.run_code,
+            'Run active tab code.'
+        )
+        self.add_shortcut(
             'open_terminal',
             'Ctrl+`',
             common_events.show_terminal,
