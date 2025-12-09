@@ -222,13 +222,12 @@ class EditorTabWidget(QtWidgets.QTabWidget):
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         if event.button() == QtCore.Qt.MouseButton.MiddleButton:
-            for i in range(self.count()):
-                if self.tabBar().tabRect(i).contains(event.pos()):
-                    self.removeTab(i)
-                    self._handle_tab_close(i)
-                    event.accept()
-                    return
-
+            pos_in_bar = self.tabBar().mapFrom(self, event.pos())
+            i = self.tabBar().tabAt(pos_in_bar)
+            if i != -1:
+                self._handle_tab_close(i)
+                event.accept()
+                return
         super().mousePressEvent(event)
 
     def add_editor_tab(
@@ -321,11 +320,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         self.removeTab(index)
 
         if self.count() == 0:
-            print('lorem ipsum')
-            event = broker.Event(
-                'tab_manager',
-                'all_tabs_closed'
-            )
+            event = broker.Event('tab_manager', 'all_tabs_closed')
             broker.emit(event)
 
     def _mark_modified(self, index: int) -> None:

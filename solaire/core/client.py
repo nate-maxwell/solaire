@@ -19,7 +19,7 @@ from solaire.core import explorer
 from solaire.core import sections_bar
 from solaire.core import shortucts
 from solaire.core import status_bar
-from solaire.core import tabs
+from solaire.core import editor_tabs
 from solaire.core import toolbar
 
 
@@ -33,7 +33,7 @@ class SolaireClientWidget(QtWidgets.QWidget):
     def _create_widgets(self) -> None:
         self.layout = QtWidgets.QHBoxLayout()
         self.sections_bar = sections_bar.SectionsBar(self)
-        self.tab_manager = tabs.EditorTabWidget(self)
+        self.tab_manager = editor_tabs.EditorTabWidget(self)
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
 
         self.explorer_widget = QtWidgets.QWidget()

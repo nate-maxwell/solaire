@@ -19,6 +19,7 @@ from PySide6TK.QtWrappers import CodeMiniMap
 from PySide6TK.QtWrappers import PythonHighlighter
 
 from solaire.core import broker
+from solaire.core import timers
 
 
 T_Highlighter = TypeVar('T_Highlighter', bound=QtGui.QSyntaxHighlighter)
@@ -252,12 +253,12 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self.analyze_fold_regions()
 
     def _create_cursor_timer(self) -> None:
-        self._cursor_timer = QtCore.QTimer(self)
-        self._cursor_timer.setInterval(16)
-        self._cursor_timer.setSingleShot(True)
-        self._cursor_timer.timeout.connect(self._emit_cursor_position)
-
-        self.cursorPositionChanged.connect(self._cursor_timer.start)
+        self._cursor_timer = timers.create_bind_and_start_timer(
+            self,
+            16,
+            self.cursorPositionChanged,
+            self._emit_cursor_position
+        )
 
     # -----Line Numbers--------------------------------------------------------
 
@@ -312,14 +313,11 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
     # -----Code Folding--------------------------------------------------------
 
     def _create_fold_analyzer(self) -> None:
-        self._fold_timer = QtCore.QTimer(self)
-        self._fold_timer.setInterval(300)
-        self._fold_timer.setSingleShot(True)
-        self._fold_timer.timeout.connect(self.analyze_fold_regions)
-
-        # Replace direct connection:
-        self.document().contentsChanged.connect(
-            lambda: self._fold_timer.start()
+        self._fold_timer = timers.create_bind_and_start_timer(
+            self,
+            300,
+            self.document().contentsChanged,
+            self.analyze_fold_regions
         )
 
     def analyze_fold_regions(self) -> None:
