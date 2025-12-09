@@ -150,6 +150,9 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
     uncommented = QtCore.Signal(range)
     folding_changed = QtCore.Signal()
 
+    column = 81 - 2
+    guide_color = QtGui.QColor(70, 70, 70, 180)
+
     def __init__(
             self,
             parent: Optional[QtWidgets.QWidget] = None,
@@ -236,6 +239,10 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self.line_number_area.raise_()
         self.fold_area.raise_()
 
+    def paintEvent(self, event: QtGui.QPaintEvent):
+        super().paintEvent(event)
+        self._paint_guide()
+
     def jump_to_line(self, line_number: int) -> None:
         """Jump to a specific line in the editor."""
         cursor = self.textCursor()
@@ -309,6 +316,26 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
 
         if rect.contains(self.viewport().rect()):
             self.update_line_number_area_width(0)
+
+    # -----Guide Ruler---------------------------------------------------------
+
+    def _paint_guide(self) -> None:
+        """Paints a common IDE vertical ruler for line length."""
+        painter = QtGui.QPainter(self.viewport())
+        painter.setPen(QtGui.QPen(self.guide_color, 1))
+
+        # Average character width in current font
+        fm = QtGui.QFontMetrics(self.font())
+        char_width = fm.horizontalAdvance('M')
+
+        x = self.column * char_width
+        x -= self.horizontalScrollBar().value()
+
+        # If visible in viewport...
+        if 0 <= x <= self.viewport().width():
+            painter.drawLine(x, 0, x, self.viewport().height())
+
+        painter.end()
 
     # -----Code Folding--------------------------------------------------------
 

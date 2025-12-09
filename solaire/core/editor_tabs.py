@@ -119,7 +119,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         after = time.perf_counter()
         elapsed = after - before
         elapsed_str = f'Executed in {elapsed:.3f} seconds.'
-        print(elapsed_str)
+        print('\n\n', elapsed_str)
 
         if result is not None:
             print(result)
