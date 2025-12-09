@@ -453,38 +453,20 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
                     center_y = int(top + height / 2)
                     center_x = self.fold_area_width // 2
                     size = 6
+                    half: int = size // 2
 
                     painter.setPen(QtGui.QPen(QtGui.QColor('lightGray'), 1))
                     painter.setBrush(QtGui.QColor('lightGray'))
 
                     if region.is_folded:
-                        # Folded tri
-                        triangle = [
-                            QtCore.QPoint(
-                                center_x - size // 2,
-                                center_y - size // 2
-                            ),
-                            QtCore.QPoint(
-                                center_x - size // 2,
-                                center_y + size // 2
-                            ),
-                            QtCore.QPoint(center_x + size // 2, center_y),
-                        ]
+                        offsets = [(-half, -half), (-half, half), (half, 0)]
                     else:
-                        # Unfolded tri
-                        triangle = [
-                            QtCore.QPoint(
-                                center_x - size // 2,
-                                center_y - size // 2
-                            ),
-                            QtCore.QPoint(
-                                center_x + size // 2,
-                                center_y - size // 2
-                            ),
-                            QtCore.QPoint(center_x, center_y + size // 2),
-                        ]
+                        offsets = [(-half, -half), (half, -half), (0, half)]
 
-                    painter.drawPolygon(triangle)
+                    c = QtCore.QPoint(center_x, center_y)
+                    qpt = QtCore.QPoint  # alias to avoid repeated attr lookups
+                    triangle = [c + qpt(dx, dy) for dx, dy in offsets]
+                    painter.drawPolygon(QtGui.QPolygon(triangle))
 
             block = block.next()
             if not block.isValid():

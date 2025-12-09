@@ -6,6 +6,7 @@ structure explorer, or plugin manager.
 
 from PySide6 import QtGui
 from PySide6 import QtWidgets
+from PySide6TK import QtWrappers
 
 import solaire.core.resources
 from solaire.core import common_events
@@ -46,8 +47,9 @@ class SectionsBar(QtWidgets.QWidget):
 
         self.layout.addWidget(self.btn_explorer)
         self.layout.addWidget(self.btn_structure)
-        self.layout.addWidget(self.btn_plugin)
         self.layout.addStretch()
+        self.layout.addWidget(self.btn_plugin)
+        self.layout.addWidget(QtWrappers.VerticalSpacer(10))
 
     def _create_connections(self) -> None:
         self.btn_explorer.clicked.connect(common_events.toggle_explorer)

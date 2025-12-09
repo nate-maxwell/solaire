@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import Any
 from typing import Optional
 
+from solaire.core import common_events
+
 
 _PROJECT_PATH: Optional[Path] = None
 _USER_NAMESPACE: dict[str, Any] = {}
@@ -73,6 +75,8 @@ def execute_user_code(
     Returns:
         Optional[str]: None if successful; otherwise an error message string.
     """
+    common_events.show_output()
+
     global _USER_NAMESPACE
 
     try:

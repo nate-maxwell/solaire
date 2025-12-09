@@ -21,6 +21,7 @@ from solaire.core import shortucts
 from solaire.core import status_bar
 from solaire.core import editor_tabs
 from solaire.core import toolbar
+from solaire.core import output_tabs
 
 
 class SolaireClientWidget(QtWidgets.QWidget):
@@ -33,8 +34,11 @@ class SolaireClientWidget(QtWidgets.QWidget):
     def _create_widgets(self) -> None:
         self.layout = QtWidgets.QHBoxLayout()
         self.sections_bar = sections_bar.SectionsBar(self)
-        self.tab_manager = editor_tabs.EditorTabWidget(self)
-        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
+        self.tab_editor = editor_tabs.EditorTabWidget(self)
+        self.tab_outputs = output_tabs.OutputTabWidget(self)
+
+        self.splitter_bottom = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
+        self.splitter_left = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
 
         self.explorer_widget = QtWidgets.QWidget()
         self.vlayout_explorers = QtWidgets.QVBoxLayout()
@@ -46,14 +50,18 @@ class SolaireClientWidget(QtWidgets.QWidget):
         self.vlayout_explorers.addWidget(self.file_explorer)
         self.vlayout_explorers.addWidget(self.explorer_widget)
 
-        self.splitter.addWidget(self.explorer_widget)
-        self.splitter.addWidget(self.tab_manager)
-        self.splitter.setSizes([(1920 - 1700), 1700])
+        self.splitter_bottom.addWidget(self.tab_editor)
+        self.splitter_bottom.addWidget(self.tab_outputs)
+        self.splitter_bottom.setSizes([(1080 - 200), 200])
+
+        self.splitter_left.addWidget(self.explorer_widget)
+        self.splitter_left.addWidget(self.splitter_bottom)
+        self.splitter_left.setSizes([(1920 - 1700), 1700])
 
         self.setLayout(self.layout)
         self.layout.addWidget(self.sections_bar)
         self.layout.addWidget(PySide6TK.shapes.VerticalLine())
-        self.layout.addWidget(self.splitter)
+        self.layout.addWidget(self.splitter_left)
 
 
 class SolaireClientWindow(QtWrappers.MainWindow):

@@ -57,7 +57,7 @@ class ShortcutManager(QtWrappers.KeyShortcutManager):
         self.add_shortcut(
             'open_terminal',
             'Ctrl+`',
-            common_events.show_terminal,
+            common_events.show_output,
             'Show the terminal.'
         )
 

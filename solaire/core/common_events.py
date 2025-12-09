@@ -81,12 +81,19 @@ def toggle_structure() -> None:
     broker.emit(event)
 
 
-def show_terminal() -> None:
-    """Show the terminal if it is hidden."""
-    print('Terminal coming soon!')
+def show_output() -> None:
+    """Show the output tab widget if it is hidden."""
+    event = broker.Event('SYSTEM', 'SHOW_OUTPUT')
+    broker.emit(event)
 
 
 def run_code() -> None:
     """Run the active file's code. Emits None."""
     event = broker.Event('SYSTEM', 'RUN')
+    broker.emit(event)
+
+
+def flush_output() -> None:
+    """Clears stdout and stderr. Emits None."""
+    event = broker.Event('SYSTEM', 'FLUSH')
     broker.emit(event)
