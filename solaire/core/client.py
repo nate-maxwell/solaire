@@ -75,6 +75,13 @@ class SolaireClientWindow(QtWrappers.MainWindow):
         shortucts.init_shortcut_manager(self)  # must come before main widget
         broker.register_source('SYSTEM')
 
+        self._is_fullscreen = False
+        broker.register_subscriber(
+            'window',
+            'toggle_full_screen',
+            self.toggle_fullscreen
+        )
+
         self.widget_main = SolaireClientWidget()
         self.setCentralWidget(self.widget_main)
 
@@ -82,3 +89,11 @@ class SolaireClientWindow(QtWrappers.MainWindow):
         self.addToolBar(QtCore.Qt.ToolBarArea.TopToolBarArea, self.toolbar)
         self.status_bar = status_bar.StatusBar(self)
         self.addToolBar(QtCore.Qt.ToolBarArea.BottomToolBarArea, self.status_bar)
+
+    def toggle_fullscreen(self, _: broker.Event) -> None:
+        if not self._is_fullscreen:
+            self.showFullScreen()
+        else:
+            self.showNormal()
+
+        self._is_fullscreen = not self._is_fullscreen

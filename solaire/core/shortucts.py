@@ -60,6 +60,12 @@ class ShortcutManager(QtWrappers.KeyShortcutManager):
             common_events.show_output,
             'Show the terminal.'
         )
+        self.add_shortcut(
+            'toggle_full_screen',
+            'F11',
+            common_events.toggle_full_screen,
+            'Toggle fullscreen'
+        )
 
 
 shortcut_manager: Optional[ShortcutManager] = None

@@ -70,14 +70,20 @@ def open_folder() -> None:
 
 
 def toggle_explorer() -> None:
-    """Signal to toggle visibility on file explorer."""
+    """Signal to toggle visibility on file explorer. Emits None."""
     event = broker.Event('sections_bar', 'toggle_explorer')
     broker.emit(event)
 
 
 def toggle_structure() -> None:
-    """Signal to toggle visibility on structure explorer."""
+    """Signal to toggle visibility on structure explorer. Emits None."""
     event = broker.Event('sections_bar', 'toggle_structure')
+    broker.emit(event)
+
+
+def toggle_full_screen() -> None:
+    """Signal to toggle full screen. Emits None."""
+    event = broker.Event('window', 'toggle_full_screen')
     broker.emit(event)
 
 
