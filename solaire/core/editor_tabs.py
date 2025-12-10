@@ -55,7 +55,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
 
         self._file_paths: dict[int, Path] = {}
         self._modified_state: dict[int, bool] = {}
-        self._editor_widgets: dict[int, CodeEditor] = {}
+        self._editor_widgets: dict[int, QtWidgets.QPlainTextEdit] = {}
 
         self.tabCloseRequested.connect(self._handle_tab_close)
         self.currentChanged.connect(self.on_tab_changed)
@@ -111,6 +111,9 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         )
 
     def run_code(self, _: broker.Event) -> None:
+        if not isinstance(self.currentWidget(), CodeEditor):
+            return
+
         editor: CodeEditor = cast(CodeEditor, self.currentWidget())
         code = editor.toPlainText()
 
@@ -232,7 +235,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
 
     def add_editor_tab(
             self,
-            editor_widget: CodeEditor,
+            editor_widget: QtWidgets.QPlainTextEdit,
             file_path: Optional[Path] = None
     ) -> int:
         """

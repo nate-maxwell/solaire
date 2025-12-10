@@ -30,7 +30,6 @@ class SolaireToolbar(QtWrappers.Toolbar):
         self._edit_section()
         self._view_section()
         self._code_section()
-        self._tools_section()
         self._preference_section()
         self._plugins_section()
         self._help_section()
@@ -61,9 +60,6 @@ class SolaireToolbar(QtWrappers.Toolbar):
     def _code_section(self) -> None:
         menu = self.add_menu('Code')
         self.add_menu_command(menu, 'Run', common_events.run_code)
-
-    def _tools_section(self) -> None:
-        menu = self.add_menu('Tools')
 
     def _preference_section(self) -> None:
         menu = self.add_menu('Preferences')

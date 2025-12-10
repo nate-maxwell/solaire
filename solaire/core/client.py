@@ -24,6 +24,16 @@ from solaire.core import toolbar
 from solaire.core import output_tabs
 
 
+splitter_style = """
+QSplitter::handle {
+    background: #444;
+}
+QSplitter::handle:hover {
+    background: #777;
+}
+"""
+
+
 class SolaireClientWidget(QtWidgets.QWidget):
     def __init__(self, parent: QtWidgets.QWidget = None) -> None:
         super().__init__(parent)
@@ -38,7 +48,9 @@ class SolaireClientWidget(QtWidgets.QWidget):
         self.tab_outputs = output_tabs.OutputTabWidget(self)
 
         self.splitter_bottom = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
+        self.splitter_bottom.setStyleSheet(splitter_style)
         self.splitter_left = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
+        self.splitter_left.setStyleSheet(splitter_style)
 
         self.explorer_widget = QtWidgets.QWidget()
         self.vlayout_explorers = QtWidgets.QVBoxLayout()

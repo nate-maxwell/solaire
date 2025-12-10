@@ -48,7 +48,7 @@ class _FoldRegion:
     is_folded: bool = False
 
 
-class _FoldArea(QtWidgets.QWidget):
+class FoldArea(QtWidgets.QWidget):
     """Widget for displaying fold indicators."""
 
     def __init__(self, code_editor: 'CodeEditor') -> None:
@@ -75,7 +75,7 @@ class _FoldArea(QtWidgets.QWidget):
             self.editor.toggle_fold(block_number)
 
 
-class _LineNumberArea(QtWidgets.QWidget):
+class LineNumberArea(QtWidgets.QWidget):
     """
     A side-gutter widget responsible for rendering line numbers for a
     ``CodeEditor`` instance.
@@ -117,7 +117,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
     external tools to hook into indentation events if needed.
 
     Attributes:
-        line_number_area (_LineNumberArea):
+        line_number_area (LineNumberArea):
             The side widget responsible for drawing line numbers.
         indented (Signal(range)):
             Emitted when a block of lines should be indented.
@@ -164,8 +164,8 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             QtGui.QFontMetricsF(self.font()).horizontalAdvance(' ') * 4
         )
 
-        self.line_number_area = _LineNumberArea(self)
-        self.fold_area = _FoldArea(self)
+        self.line_number_area = LineNumberArea(self)
+        self.fold_area = FoldArea(self)
         self._fold_regions: dict[int, _FoldRegion] = {}
         self.fold_area_width = 16
 
