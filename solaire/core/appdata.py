@@ -6,9 +6,10 @@ ALl assuming Windows environment variables names and values.
 
 import json
 import os
+from dataclasses import asdict
 from dataclasses import dataclass
-from dataclasses import field
 from pathlib import Path
+from typing import Any
 from typing import Optional
 from typing import Union
 
@@ -72,24 +73,24 @@ class CodePreferences(object):
 @dataclass
 class PythonCodeColor(object):
     """Syntax highlighting colors for Python."""
-    keyword: list[int] = field(default_factory=lambda: [0, 255, 255])
-    operator: list[int] = field(default_factory=lambda: [255, 255, 255])
-    brace: list[int] = field(default_factory=lambda: [255, 0, 165])
-    string_single: list[int] = field(default_factory=lambda: [144, 144, 238])
-    string_triple: list[int] = field(default_factory=lambda: [0, 0, 100])
-    comment: list[int] = field(default_factory=lambda: [255, 255, 0])
-    numbers: list[int] = field(default_factory=lambda: [255, 255, 0])
-    def_: list[int] = field(default_factory=lambda: [144, 144, 238])
-    class_: list[int] = field(default_factory=lambda: [144, 144, 238])
-    self_: list[int] = field(default_factory=lambda: [255, 0, 165])
+    keyword: str = '#00ffff'
+    operator: str = '#ffffff'
+    brace: str = '#ffa500'
+    string_single: str = '#90ee90'
+    string_triple: str = '#006400'
+    comment: str = '#ff00ff'
+    numbers: str = '#ff00ff'
+    def_: str = '#90ee90'
+    class_: str = '#90ee90'
+    self_: str = '#ffa500'
 
 
 @dataclass
 class JsonCodeColor(object):
     """Syntax highlighting colors for JSON."""
-    numeric: list[int] = field(default_factory=lambda: [255, 0, 165])
-    key: list[int] = field(default_factory=lambda: [255, 255, 255])
-    value: list[int] = field(default_factory=lambda: [144, 144, 238])
+    numeric: str = '#ffa500'
+    key: str = '#ffffff'
+    value: str = '#90ee90'
 
 
 @dataclass
@@ -101,34 +102,64 @@ class Refresh(object):
 
 # -----Primary Preferences-----------------------------------------------------
 
-@dataclass
 class Preferences(object):
-    code_preferences: CodePreferences = CodePreferences()
-    python_code_color: PythonCodeColor = PythonCodeColor()
-    json_code_color: JsonCodeColor = JsonCodeColor()
-    refresh: Refresh = Refresh()
+    """
+    Singleton container holding all preferences data for the application.
 
-    def to_dict(self) -> dict[JSON_TYPE, JSON_TYPE]:
+    Checks roaming appdata for preferences file. If the file is found, class
+    populates itself from file contents. Otherwise, file is created using class
+    defaults.
+    """
+
+    _instance: Optional['Preferences'] = None
+
+    def __new__(cls, *args: Any, **kwargs: Any) -> 'Preferences':
+        if cls._instance is None:
+            cls._instance = super(Preferences, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self) -> None:
+        # Prevent re-initialization on subsequent calls
+        if getattr(self, '_initialized', False):
+            return
+        self._initialized = True
+
+        # Defaults
+        self.code_preferences: CodePreferences = CodePreferences()
+        self.python_code_color: PythonCodeColor = PythonCodeColor()
+        self.json_code_color: JsonCodeColor = JsonCodeColor()
+        self.refresh: Refresh = Refresh()
+
+        # First-time load from disk (if present), else create defaults
+        if SOLAIRE_PREFERENCES_PATH.exists():
+            self.load()
+        else:
+            self.save()
+
+    def to_dict(self) -> dict[str, JSON_TYPE]:
+        """Serialize to a plain dict."""
         return {
-            'code_preferences': self.code_preferences.__dict__,
-            'python_code_color': self.python_code_color.__dict__,
-            'json_code_color': self.json_code_color.__dict__,
-            'refresh': self.refresh.__dict__,
+            'code_preferences': asdict(self.code_preferences),
+            'python_code_color': asdict(self.python_code_color),
+            'json_code_color': asdict(self.json_code_color),
+            'refresh': asdict(self.refresh),
         }
 
-    def from_dict(self, data: dict[JSON_TYPE, JSON_TYPE]) -> None:
-        self.code_preferences.__dict__ = data['code_preferences']
-        self.python_code_color.__dict__ = data['python_code_color']
-        self.json_code_color.__dict__ = data['json_code_color']
-        self.refresh.__dict__ = data['refresh']
+    def from_dict(self, data: dict[str, JSON_TYPE]) -> None:
+        """Apply a serialized dict into dataclass fields safely."""
+        if 'code_preferences' in data:
+            self.code_preferences = CodePreferences(**data['code_preferences'])
+        if 'python_code_color' in data:
+            self.python_code_color = PythonCodeColor(**data['python_code_color'])
+        if 'json_code_color' in data:
+            self.json_code_color = JsonCodeColor(**data['json_code_color'])
+        if 'refresh' in data:
+            self.refresh = Refresh(**data['refresh'])
 
+    def load(self) -> None:
+        data = import_data_from_json(SOLAIRE_PREFERENCES_PATH)
+        if data is not None:
+            self.from_dict(data)
 
-PREFERENCES = Preferences()
-
-
-if SOLAIRE_PREFERENCES_PATH.exists():
-    PREFERENCES.from_dict(import_data_from_json(SOLAIRE_PREFERENCES_PATH))
-else:
-    SOLAIRE_APPDATA_PATH.mkdir(parents=True, exist_ok=True)
-    default_data = PREFERENCES.to_dict()
-    export_data_to_json(SOLAIRE_PREFERENCES_PATH, default_data)
+    def save(self) -> None:
+        export_data_to_json(SOLAIRE_PREFERENCES_PATH, self.to_dict(), True)

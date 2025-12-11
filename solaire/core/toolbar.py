@@ -12,6 +12,7 @@ from PySide6TK import QtWrappers
 from solaire.core import common_events
 from solaire.core import shortucts
 from solaire.components import about
+from solaire.components import preferences
 
 
 class SolaireToolbar(QtWrappers.Toolbar):
@@ -63,6 +64,11 @@ class SolaireToolbar(QtWrappers.Toolbar):
 
     def _preference_section(self) -> None:
         menu = self.add_menu('Preferences')
+        self.add_menu_command(
+            menu,
+            'Preferences',
+            lambda: preferences.show_preferences_widget(self)
+        )
 
     def _plugins_section(self) -> None:
         menu = self.add_menu('Plugins')

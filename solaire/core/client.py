@@ -14,6 +14,7 @@ from PySide6 import QtWidgets
 from PySide6TK import QtWrappers
 
 import solaire.core.resources
+from solaire.core import appdata
 from solaire.core import broker
 from solaire.core import explorer
 from solaire.core import sections_bar
@@ -22,6 +23,7 @@ from solaire.core import status_bar
 from solaire.core import editor_tabs
 from solaire.core import toolbar
 from solaire.core import output_tabs
+
 
 
 splitter_style = """
@@ -83,6 +85,8 @@ class SolaireClientWindow(QtWrappers.MainWindow):
             parent=parent,
             icon_path=solaire.core.resources.ICON_PATH
         )
+        _ = appdata.Preferences()  # initialize singleton
+
         QtWrappers.set_style(self, QtWrappers.QSS_COMBINEAR)
         shortucts.init_shortcut_manager(self)  # must come before main widget
         broker.register_source('SYSTEM')
