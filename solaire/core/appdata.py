@@ -13,12 +13,15 @@ from typing import Any
 from typing import Optional
 from typing import Union
 
+from solaire.core import broker
 
 JSON_TYPE = Union[dict, list, int, float, bool, str, None]
 
 _APPDATA_ROAMING_PATH = Path(os.environ['APPDATA'])
 SOLAIRE_APPDATA_PATH = Path(_APPDATA_ROAMING_PATH, 'Solaire')
 SOLAIRE_PREFERENCES_PATH = Path(SOLAIRE_APPDATA_PATH, 'preferences.json')
+
+broker.register_source('SYSTEM')
 
 
 def export_data_to_json(path: Path, data: dict, overwrite: bool = False) -> None:
@@ -80,8 +83,8 @@ class PythonCodeColor(object):
     string_triple: str = '#006400'
     comment: str = '#ff00ff'
     numbers: str = '#ff00ff'
-    def_: str = '#90ee90'
-    class_: str = '#90ee90'
+    def_: str = '#00ffff'
+    class_: str = '#00ffff'
     self_: str = '#ffa500'
 
 
@@ -157,9 +160,26 @@ class Preferences(object):
             self.refresh = Refresh(**data['refresh'])
 
     def load(self) -> None:
+        """
+        Load in data from user appdata file if it can be found, otherwise, save
+        default data to user appdata folder.
+        """
         data = import_data_from_json(SOLAIRE_PREFERENCES_PATH)
         if data is not None:
             self.from_dict(data)
 
     def save(self) -> None:
+        """
+        Save current data to user's appdata folder.
+        Emit event signalling a potential update to preference data.
+        Emitted data is None as the preference singleton can be accessed from
+        anywhere.
+        """
         export_data_to_json(SOLAIRE_PREFERENCES_PATH, self.to_dict(), True)
+        event = broker.Event('SYSTEM', 'PREFERENCES_UPDATED')
+        broker.emit(event)
+
+
+def initialize() -> None:
+    """Call on startup to ensure the preferences singleton is loaded."""
+    _ = Preferences()  # Ensures singleton is populated by constructor.

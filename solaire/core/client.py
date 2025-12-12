@@ -85,7 +85,7 @@ class SolaireClientWindow(QtWrappers.MainWindow):
             parent=parent,
             icon_path=solaire.core.resources.ICON_PATH
         )
-        _ = appdata.Preferences()  # initialize singleton
+        appdata.initialize()
 
         QtWrappers.set_style(self, QtWrappers.QSS_COMBINEAR)
         shortucts.init_shortcut_manager(self)  # must come before main widget
