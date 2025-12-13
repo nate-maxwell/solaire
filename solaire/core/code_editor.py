@@ -381,7 +381,8 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         )
 
     def analyze_fold_regions(self) -> None:
-        """Analyze document to find foldable regions.
+        """
+        Analyze document to find foldable regions.
 
         Supports:
             - Python indentation blocks (lines ending with ':')
@@ -674,7 +675,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         elif prefs.code_preferences.tab_type == appdata.TAB_TYPE_TAB:
             return '\t'
         else:
-            raise EnvironmentError('Unknown tab type from preferences!')
+            raise appdata.AppdataError('Unknown tab type from preferences!')
 
     def indent(self, lines: range) -> None:
         """Indent the lines within the given range."""

@@ -1,11 +1,14 @@
 """
 Status bar at the bottom of the application.
+This status bar is not meant to allow users to change settings, but rather
+simply display application data and preference values.
 """
 
 
 from PySide6 import QtWidgets
 from PySide6TK import QtWrappers
 
+from solaire.core import appdata
 from solaire.core import broker
 
 
@@ -17,6 +20,11 @@ class StatusBar(QtWrappers.Toolbar):
             'code_editor',
             'cursor_position',
             self.cursor_changed_subscription
+        )
+        broker.register_subscriber(
+            'SYSTEM',
+            'PREFERENCES_UPDATED',
+            self.on_appdata_changed
         )
 
     def build(self) -> None:
@@ -46,3 +54,12 @@ class StatusBar(QtWrappers.Toolbar):
         line = event.data[0]
         col = event.data[1]
         self.lbl_cursor.setText(f'{line}:{col}')
+
+    def on_appdata_changed(self, _: broker.Event) -> None:
+        prefs = appdata.Preferences().code_preferences
+        if prefs.tab_type == appdata.TAB_TYPE_SPACE:
+            self.lbl_tab_type.setText(f'{prefs.tab_space_width} spaces')
+        elif prefs.tab_type == appdata.TAB_TYPE_TAB:
+            self.lbl_tab_type.setText('Tab')
+        else:
+            raise appdata.AppdataError('Unknown tab type from preferences!')

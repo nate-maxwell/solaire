@@ -24,6 +24,10 @@ SOLAIRE_PREFERENCES_PATH = Path(SOLAIRE_APPDATA_PATH, 'preferences.json')
 broker.register_source('SYSTEM')
 
 
+class AppdataError(Exception):
+    """Errors for unhandled appdata values."""
+
+
 def export_data_to_json(path: Path, data: dict, overwrite: bool = False) -> None:
     """
     Export dict to json file path.
