@@ -85,11 +85,11 @@ class SolaireClientWindow(QtWrappers.MainWindow):
             parent=parent,
             icon_path=solaire.core.resources.ICON_PATH
         )
-        _ = appdata.Preferences()  # initialize singleton
 
         QtWrappers.set_style(self, QtWrappers.QSS_COMBINEAR)
         shortucts.init_shortcut_manager(self)  # must come before main widget
         broker.register_source('SYSTEM')
+        appdata.initialize()
 
         self._is_fullscreen = False
         broker.register_subscriber(

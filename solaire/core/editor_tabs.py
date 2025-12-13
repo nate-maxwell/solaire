@@ -6,17 +6,17 @@ All tab management is handled here.
 
 import time
 from pathlib import Path
-from typing import cast
 from typing import Optional
+from typing import cast
 
 from PySide6 import QtCore
 from PySide6 import QtGui
 from PySide6 import QtWidgets
-from PySide6TK import QtWrappers
 
-from solaire.core.code_editor import CodeEditor
 from solaire.core import broker
 from solaire.core import evaluator
+from solaire.core import languages
+from solaire.core.code_editor import CodeEditor
 
 
 class DraggableTabBar(QtWidgets.QTabBar):
@@ -140,13 +140,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
             self.on_tab_changed(existing_index)
             return
 
-        if filepath.suffix == '.py' or filepath.suffix == '.pyw':
-            highlighter = QtWrappers.PythonHighlighter
-        elif filepath.suffix == '.json':
-            highlighter = QtWrappers.JsonHighlighter
-        else:
-            highlighter = None
-
+        highlighter = languages.generate_highlighter_from_file(filepath)
         editor = CodeEditor(self, highlighter)
         new_idx = self.open_file(filepath, editor)
         self.on_tab_changed(new_idx)

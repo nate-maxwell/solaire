@@ -8,24 +8,18 @@ Uses a regex syntax highlighter.
 
 from dataclasses import dataclass
 from typing import Optional
-from typing import Type
-from typing import TypeVar
 
 import PySide6TK.text
 from PySide6 import QtCore
 from PySide6 import QtGui
 from PySide6 import QtWidgets
 from PySide6TK.QtWrappers import CodeMiniMap
-from PySide6TK.QtWrappers import PythonHighlighter
 
 from solaire.core import broker
+from solaire.core import languages
 from solaire.core import timers
-
-
-T_Highlighter = TypeVar('T_Highlighter', bound=QtGui.QSyntaxHighlighter)
-
-SyntaxHighlighter = Type[T_Highlighter]
-"""Any QSyntaxHighlighter class object or derived class object."""
+from solaire.core.languages.python_syntax import PythonHighlighter
+from solaire.core.languages.python_syntax import reload_color_scheme
 
 _INDENT = ' ' * 4
 _COMMENT_PREFIX = '# '
@@ -38,6 +32,9 @@ _WRAPPING_PAIRS = {
     '{': '}',
     '`': '`',
 }
+
+
+broker.emit(broker.Event('SYSTEM', 'PREFERENCES_UPDATED'))
 
 
 @dataclass
@@ -99,6 +96,9 @@ class LineNumberArea(QtWidgets.QWidget):
         self.editor.line_number_area_paint_event(event)
 
 
+optional_highlighter = Optional[languages.SyntaxHighlighter]
+
+
 class CodeEditor(QtWidgets.QPlainTextEdit):
     """
     A custom code-editing widget built on top of ``QPlainTextEdit`` with
@@ -131,7 +131,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             Emitted whenever code is folded or unfolded.
 
     Args:
-        syntax_highlighter (SyntaxHighlighter, optional):
+        syntax_highlighter_cls (SyntaxHighlighter, optional):
             A ``QSyntaxHighlighter`` subclass to use for syntax
             highlighting. Defaults to ``PythonHighlighter``.
 
@@ -156,7 +156,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
     def __init__(
             self,
             parent: Optional[QtWidgets.QWidget] = None,
-            syntax_highlighter: Optional[SyntaxHighlighter] = PythonHighlighter
+            syntax_highlighter_cls: optional_highlighter = PythonHighlighter
     ) -> None:
         super(CodeEditor, self).__init__(parent)
 
@@ -179,8 +179,10 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self._create_cursor_timer()
         self.update_line_number_area_width(0)
 
-        if syntax_highlighter is not None:
-            syntax_highlighter(self.document())
+        self.syntax_highlighter_cls = syntax_highlighter_cls
+        self._highlighter: Optional[QtGui.QSyntaxHighlighter] = None
+        if self.syntax_highlighter_cls is not None:
+            self._highlighter = self.syntax_highlighter_cls(self.document())
         self.highlight_current_line()
 
         self.setFont(QtGui.QFont('Courier', 12))
@@ -200,6 +202,11 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             'structure_explorer',
             'item_clicked',
             lambda event: self.jump_to_line(event.data)
+        )
+        broker.register_subscriber(
+            'SYSTEM',
+            'PREFERENCES_UPDATED',
+            self._on_preferences_updated
         )
 
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
@@ -266,6 +273,24 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             self.cursorPositionChanged,
             self._emit_cursor_position
         )
+
+    def _on_preferences_updated(self, _: broker.Event) -> None:
+        reload_color_scheme()
+        self._rebuilt_highlighter()
+
+    def _rebuilt_highlighter(self) -> None:
+        """Recreate the syntax highlighter for the current document."""
+        if self._highlighter is None:
+            return
+
+        self._highlighter.setDocument(None)
+        self._highlighter.deleteLater()
+        self._highlighter = None
+
+        if self.syntax_highlighter_cls is None:
+            return
+
+        self._highlighter = self.syntax_highlighter_cls(self.document())
 
     # -----Line Numbers--------------------------------------------------------
 

@@ -1,3 +1,11 @@
+"""
+A UI interface to read and update Solaire's underlying application data, namely
+its preferences.
+
+As the system works without the user interacting with preference data, this is
+not categorized as a "core" feature.
+"""
+
 from typing import Optional
 
 from PySide6 import QtCore
