@@ -15,13 +15,14 @@ from PySide6 import QtGui
 from PySide6 import QtWidgets
 from PySide6TK.QtWrappers import CodeMiniMap
 
+from solaire.core import appdata
 from solaire.core import broker
 from solaire.core import languages
 from solaire.core import timers
 from solaire.core.languages.python_syntax import PythonHighlighter
 from solaire.core.languages.python_syntax import reload_color_scheme
 
-_INDENT = ' ' * 4
+
 _COMMENT_PREFIX = '# '
 
 _WRAPPING_PAIRS = {
@@ -32,9 +33,6 @@ _WRAPPING_PAIRS = {
     '{': '}',
     '`': '`',
 }
-
-
-broker.emit(broker.Event('SYSTEM', 'PREFERENCES_UPDATED'))
 
 
 @dataclass
@@ -150,7 +148,6 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
     uncommented = QtCore.Signal(range)
     folding_changed = QtCore.Signal()
 
-    column = 81 - 2
     guide_color = QtGui.QColor(70, 70, 70, 180)
 
     def __init__(
@@ -267,9 +264,10 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self.analyze_fold_regions()
 
     def _create_cursor_timer(self) -> None:
+        prefs = appdata.Preferences().refresh
         self._cursor_timer = timers.create_bind_and_start_timer(
             self,
-            16,
+            prefs.cursor,
             self.cursorPositionChanged,
             self._emit_cursor_position
         )
@@ -344,6 +342,15 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
 
     # -----Guide Ruler---------------------------------------------------------
 
+    @property
+    def column(self) -> int:
+        """Look up and return the guide column number based on preferences."""
+        prefs = appdata.Preferences()
+        if not prefs.code_preferences.enable_vertical_guide:
+            return 0
+        else:
+            return prefs.code_preferences.guide_column
+
     def _paint_guide(self) -> None:
         """Paints a common IDE vertical ruler for line length."""
         painter = QtGui.QPainter(self.viewport())
@@ -365,9 +372,10 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
     # -----Code Folding--------------------------------------------------------
 
     def _create_fold_analyzer(self) -> None:
+        prefs = appdata.Preferences().refresh
         self._fold_timer = timers.create_bind_and_start_timer(
             self,
-            300,
+            prefs.code_fold,
             self.document().contentsChanged,
             self.analyze_fold_regions
         )
@@ -657,17 +665,28 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
 
         return first_line, last_line
 
+    @property
+    def _indent(self) -> str:
+        """Look up and return the appropriate tab string based on preferences."""
+        prefs = appdata.Preferences()
+        if prefs.code_preferences.tab_type == appdata.TAB_TYPE_SPACE:
+            return ' ' * prefs.code_preferences.tab_space_width
+        elif prefs.code_preferences.tab_type == appdata.TAB_TYPE_TAB:
+            return '\t'
+        else:
+            raise EnvironmentError('Unknown tab type from preferences!')
+
     def indent(self, lines: range) -> None:
         """Indent the lines within the given range."""
         with PySide6TK.text.PlainTextUndoBlock(self):
             for i in lines:
-                self.add_line_prefix(_INDENT, i)
+                self.add_line_prefix(self._indent, i)
 
     def unindent(self, lines: range) -> None:
         """Unindent the lines within the given range."""
         with PySide6TK.text.PlainTextUndoBlock(self):
             for i in lines:
-                self.remove_line_prefix(_INDENT, i)
+                self.remove_line_prefix(self._indent, i)
 
     def _are_lines_commented(self, lines: range) -> bool:
         """
@@ -765,7 +784,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
 
         # Tab as 4 spaces
         if event.key() == QtCore.Qt.Key.Key_Tab:
-            self.insertPlainText(_INDENT)
+            self.insertPlainText(self._indent)
             return
 
         # Enter indentation handling (preserve current indent; if line ends with ':', indent one extra level).
@@ -779,7 +798,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             base_indent = ' ' * base_indent_count
 
             # If the logical line ends with a colon, indent to the next level
-            extra = _INDENT if current_line.rstrip().endswith(':') else ''
+            extra = self._indent if current_line.rstrip().endswith(':') else ''
 
             # Insert newline via parent, then insert computed indentation
             super(CodeEditor, self).keyPressEvent(event)

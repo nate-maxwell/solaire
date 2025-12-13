@@ -38,7 +38,7 @@ class CodePreferencesMenu(PreferenceTopicMenu):
         self.topic_prefs = self.prefs.code_preferences
 
         self.tab_type = QtWrappers.LabeledComboBox('Tab Type')
-        self.tab_type.add_items(['Space', 'Tab'])
+        self.tab_type.add_items([appdata.TAB_TYPE_SPACE, appdata.TAB_TYPE_TAB])
         self.tab_type.set_current_text(self.topic_prefs.tab_type)
         self.add_widget(self.tab_type)
 
