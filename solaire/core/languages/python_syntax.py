@@ -19,14 +19,14 @@ def _fmt(key: str, *styles: str) -> QtGui.QTextCharFormat:
 class PythonSyntaxColors:
     keyword: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'keyword'))
     operator: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'operator'))
-    brace:   QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'brace'))
-    string:  QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'string_single'))
+    brace: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'brace'))
+    string: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'string_single'))
     string2: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'string_triple'))
     comment: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'comment', 'italic'))
     numbers: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'numbers'))
-    def_:    QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'def_'))
-    class_:  QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'class_'))
-    self_:   QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'self_'))
+    def_: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'def_'))
+    class_: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'class_'))
+    self_: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'self_'))
 
 
 _color_scheme = PythonSyntaxColors()
