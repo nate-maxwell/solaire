@@ -104,7 +104,7 @@ class JsonCodeColor(object):
 class Refresh(object):
     """The refresh rate of timer based code parsers / analyzers."""
     cursor: int = 16
-    code_fold: int = 300
+    code_fold: int = 600
 
 
 # -----Primary Preferences-----------------------------------------------------
