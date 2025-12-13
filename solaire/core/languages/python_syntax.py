@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from dataclasses import field
+from functools import partial
 
 from PySide6 import QtGui
 from PySide6 import QtCore
@@ -7,23 +9,32 @@ from PySide6TK import QtWrappers
 from solaire.core import appdata
 
 
-@dataclass
-class PythonSyntaxColors(object):
-    colors = appdata.Preferences().python_code_color
-    keyword = QtWrappers.color_format(colors.keyword)
-    operator = QtWrappers.color_format(colors.operator)
-    brace = QtWrappers.color_format(colors.brace)
-    string = QtWrappers.color_format(colors.string_single)
-    string2 = QtWrappers.color_format(colors.string_triple)
-    comment = QtWrappers.color_format(colors.comment, 'italic')
-    numbers = QtWrappers.color_format(colors.numbers)
+def _fmt(key: str, *styles: str) -> QtGui.QTextCharFormat:
+    """Build a QTextCharFormat from current prefs for a given key."""
+    colors = appdata.Preferences().python_code_color  # live snapshot
+    return QtWrappers.color_format(getattr(colors, key), *styles)
 
-    def_ = QtWrappers.color_format(colors.def_)
-    class_ = QtWrappers.color_format(colors.class_)
-    self_ = QtWrappers.color_format(colors.self_)
+
+@dataclass
+class PythonSyntaxColors:
+    keyword: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'keyword'))
+    operator: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'operator'))
+    brace:   QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'brace'))
+    string:  QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'string_single'))
+    string2: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'string_triple'))
+    comment: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'comment', 'italic'))
+    numbers: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'numbers'))
+    def_:    QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'def_'))
+    class_:  QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'class_'))
+    self_:   QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'self_'))
 
 
 _color_scheme = PythonSyntaxColors()
+
+
+def reload_color_scheme() -> None:
+    global _color_scheme
+    _color_scheme = PythonSyntaxColors()
 
 
 class PythonHighlighter(QtGui.QSyntaxHighlighter):

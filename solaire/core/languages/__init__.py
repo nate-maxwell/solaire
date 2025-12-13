@@ -6,6 +6,8 @@ from typing import TypeVar
 from PySide6 import QtGui
 from PySide6TK import QtWrappers
 
+from solaire.core.languages.python_syntax import PythonHighlighter
+
 T_Highlighter = TypeVar('T_Highlighter', bound=QtGui.QSyntaxHighlighter)
 
 SyntaxHighlighter = Type[T_Highlighter]
@@ -15,8 +17,8 @@ SyntaxHighlighter = Type[T_Highlighter]
 def generate_highlighter_from_file(filepath: Path) -> Optional[SyntaxHighlighter]:
     """Returns the corresponding highlighter from the file suffix."""
     suffix_highlighters = {
-        '.py': QtWrappers.PythonHighlighter,
-        '.pyw': QtWrappers.PythonHighlighter,
+        '.py': PythonHighlighter,
+        '.pyw': PythonHighlighter,
         '.json': QtWrappers.JsonHighlighter,
     }
 

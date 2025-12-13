@@ -19,6 +19,7 @@ from solaire.core import broker
 from solaire.core import languages
 from solaire.core import timers
 from solaire.core.languages.python_syntax import PythonHighlighter
+from solaire.core.languages.python_syntax import reload_color_scheme
 
 _INDENT = ' ' * 4
 _COMMENT_PREFIX = '# '
@@ -31,6 +32,9 @@ _WRAPPING_PAIRS = {
     '{': '}',
     '`': '`',
 }
+
+
+broker.emit(broker.Event('SYSTEM', 'PREFERENCES_UPDATED'))
 
 
 @dataclass
@@ -271,6 +275,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         )
 
     def _on_preferences_updated(self, _: broker.Event) -> None:
+        reload_color_scheme()
         self._rebuilt_highlighter()
 
     def _rebuilt_highlighter(self) -> None:
