@@ -40,7 +40,15 @@ class StatusBar(QtWrappers.Toolbar):
         self.addWidget(self.lbl_encoding)
         self.add_line()
 
-        self.lbl_tab_type = QtWidgets.QLabel('4 spaces')
+        self.lbl_tab_type = QtWidgets.QLabel()
+        prefs = appdata.Preferences().code_preferences
+        if prefs.tab_type == appdata.TAB_TYPE_TAB:
+            self.lbl_tab_type.setText('Tab')
+        elif prefs.tab_type == appdata.TAB_TYPE_SPACE:
+            self.lbl_tab_type.setText(f'{prefs.tab_space_width} spaces')
+        else:
+            raise appdata.AppdataError('Unknown tab type from preferences!')
+
         self.addWidget(self.lbl_tab_type)
         self.add_line()
 
