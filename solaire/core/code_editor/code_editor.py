@@ -740,7 +740,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             key = event.key()
 
             # Give Shift+navigation back to the editor (even with Ctrl held)
-            SHIFT_NAV_KEYS = (
+            shift_nav_keys = (
                 QtCore.Qt.Key.Key_Left,
                 QtCore.Qt.Key.Key_Right,
                 QtCore.Qt.Key.Key_Up,
@@ -751,33 +751,31 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
                 QtCore.Qt.Key.Key_PageDown
             )
             if (
-                    (mods & QtCore.Qt.KeyboardModifier.ShiftModifier)
-                    and key in SHIFT_NAV_KEYS
-                ):
-                super().keyPressEvent(event)  # move selection in the editor
-                # keep popup while editing
-                self._maybe_trigger_completions()
-                return
+                (mods & QtCore.Qt.KeyboardModifier.ShiftModifier)
+                and key in shift_nav_keys
+            ):
+                return super().keyPressEvent(event)
 
-        # If popup visible: handle navigation/acceptance first
-        if self._completer_popup.isVisible():
-            key = event.key()
+            # Navigation & acceptance while popup is visible
             if key in (QtCore.Qt.Key.Key_Down, QtCore.Qt.Key.Key_Tab):
                 if key == QtCore.Qt.Key.Key_Down:
                     self._completer_popup.select_next()
-                else:  # Tab accepts
+                else:
                     self._insert_completion(
                         self._completer_popup.current_text())
-                return
+                return None
+
             if key == QtCore.Qt.Key.Key_Up:
                 self._completer_popup.select_prev()
-                return
+                return None
+
             if key in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter):
-                self._insert_completion(self._completer_popup.current_text())
-                return
-            if key == QtCore.Qt.Key.Key_Escape:
+                pass
+            elif key == QtCore.Qt.Key.Key_Escape:
                 self._completer_popup.hide()
-                return
+                return None
+            else:
+                pass
 
         # Toggle comment with Ctrl+/
         if (
@@ -833,7 +831,6 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             self._completer_popup.hide()
             return
 
-        # Default behavior
         super(CodeEditor, self).keyPressEvent(event)
 
         # After normal typing, try to (re)show completions when it makes sense

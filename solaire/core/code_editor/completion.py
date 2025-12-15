@@ -53,8 +53,12 @@ class CodeCompletionPopup(QtWidgets.QFrame):
             self.hide()
             return
 
-        self._list.setCurrentRow(0)
-        max_height = min(12, self._list.count()) * self._list.sizeHintForRow(0) + 6
+        self._list.clearSelection()  # Start with NO selection by default
+        self._list.setCurrentRow(-1)
+
+        max_rows = min(12, self._list.count())
+        row_height = self._list.sizeHintForRow(0) if self._list.count() else 18
+        max_height = (max_rows * row_height) + 6
         self.resize(width_px, max_height)
         self.move(at_global_pos)
         self.show()
@@ -69,11 +73,19 @@ class CodeCompletionPopup(QtWidgets.QFrame):
         return '' if it is None else it.text()
 
     def select_next(self) -> None:
-        row = (self._list.currentRow() + 1) % max(1, self._list.count())
+        count = self._list.count()
+        if count == 0:
+            return
+        cur = self._list.currentRow()
+        row = 0 if cur < 0 else (cur + 1) % count
         self._list.setCurrentRow(row)
 
     def select_prev(self) -> None:
-        row = (self._list.currentRow() - 1) % max(1, self._list.count())
+        count = self._list.count()
+        if count == 0:
+            return
+        cur = self._list.currentRow()
+        row = (count - 1) if cur < 0 else (cur - 1) % count
         self._list.setCurrentRow(row)
 
     def _on_item_activated(self, item: QtWidgets.QListWidgetItem) -> None:
