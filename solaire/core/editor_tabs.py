@@ -110,7 +110,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
             self.run_code
         )
 
-    def run_code(self, _: broker.Event) -> None:
+    def run_code(self, _: broker.Event = broker.DUMMY_EVENT) -> None:
         if not isinstance(self.currentWidget(), CodeEditor):
             return
 
@@ -145,16 +145,25 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         new_idx = self.open_file(filepath, editor)
         self.on_tab_changed(new_idx)
 
-    def _directory_changed_subscription(self, _: broker.Event) -> None:
+    def _directory_changed_subscription(
+        self,
+        _: broker.Event = broker.DUMMY_EVENT
+    ) -> None:
         """When a directory change has been signaled by the broker."""
         while self.count() > 0:
             self.removeTab(0)
 
-    def _save_file_subscription(self, _: broker.Event) -> None:
+    def _save_file_subscription(
+            self,
+            _: broker.Event = broker.DUMMY_EVENT
+    ) -> None:
         """When a file save has been signaled by the broker."""
         self.save_file()
 
-    def _save_all_subscription(self, _: broker.Event) -> None:
+    def _save_all_subscription(
+            self,
+            _: broker.Event = broker.DUMMY_EVENT
+    ) -> None:
         """When a save-all event has been signaled by the broker."""
         for i in range(self.count()):
             self.save_file(i)

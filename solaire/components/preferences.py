@@ -13,6 +13,7 @@ from PySide6 import QtWidgets
 from PySide6TK import QtWrappers
 
 from solaire.core import appdata
+from solaire.core import theme
 
 
 ENABLED = 'Enabled'
@@ -203,6 +204,32 @@ class RefreshPreferencesMenu(PreferenceTopicMenu):
         self.topic_prefs.code_fold = self.code_fold.value()
 
 
+class ThemePreferenceMenu(PreferenceTopicMenu):
+    def __init__(self) -> None:
+        super().__init__('Theme')
+        self.topic_prefs = self.prefs.theme
+
+        self.list_theme = QtWidgets.QListWidget()
+        self.list_theme.addItems(list(theme.default_themes.keys()))
+        self.select_by_text(self.list_theme, self.topic_prefs.theme_file)
+        self.add_widget(self.list_theme)
+
+    @staticmethod
+    def select_by_text(list_widget: QtWidgets.QListWidget, text: str) -> None:
+        for i in range(list_widget.count()):
+            item = list_widget.item(i)
+            if item.text() == text:
+                list_widget.setCurrentItem(item)
+                return
+
+    def sync_settings(self) -> None:
+        theme_item = self.list_theme.currentItem()
+        if theme_item is None:
+            return
+
+        self.topic_prefs.theme_file = theme_item.text()
+
+
 class PreferencesMenu(QtWrappers.MainWindow):
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__('Preferences', parent=parent)
@@ -223,6 +250,7 @@ class PreferencesMenu(QtWrappers.MainWindow):
         self.python_code_color_settings = PythonCodeColorMenu()
         self.json_code_color_settings = JsonCodeColorMenu()
         self.refresh_settings = RefreshPreferencesMenu()
+        self.theme_settings = ThemePreferenceMenu()
 
         self.sa_topic_buttons = QtWrappers.ScrollArea()
         self.sa_topic_buttons.setFixedWidth(200)
@@ -230,6 +258,7 @@ class PreferencesMenu(QtWrappers.MainWindow):
         self.btn_python_colors = QtWidgets.QPushButton('Python Syntax Colors')
         self.btn_json_colors = QtWidgets.QPushButton('JSON Syntax Colors')
         self.btn_refresh = QtWidgets.QPushButton('Refresh Preferences')
+        self.btn_theme = QtWidgets.QPushButton('Theme')
 
         self.hlayout_actions = QtWidgets.QHBoxLayout()
         self.btn_ok = QtWidgets.QPushButton('Ok')
@@ -245,13 +274,16 @@ class PreferencesMenu(QtWrappers.MainWindow):
         self.stack_topics.addWidget(self.python_code_color_settings)
         self.stack_topics.addWidget(self.json_code_color_settings)
         self.stack_topics.addWidget(self.refresh_settings)
+        self.stack_topics.addWidget(self.theme_settings)
         self.stack_topics.addWidget(QtWrappers.VerticalSpacer())
         self.stack_topics.setCurrentIndex(0)
 
+        # Menu selection buttons
         self.sa_topic_buttons.add_widget(self.btn_code_preferences)
         self.sa_topic_buttons.add_widget(self.btn_python_colors)
         self.sa_topic_buttons.add_widget(self.btn_json_colors)
         self.sa_topic_buttons.add_widget(self.btn_refresh)
+        self.sa_topic_buttons.add_widget(self.btn_theme)
         self.sa_topic_buttons.add_widget(QtWrappers.VerticalSpacer())
 
         # Splitter
@@ -271,10 +303,12 @@ class PreferencesMenu(QtWrappers.MainWindow):
         self.layout_main.addLayout(self.hlayout_actions)
 
     def _create_connections(self) -> None:
+        # Action buttons
         self.btn_ok.clicked.connect(self.ok)
         self.btn_cancel.clicked.connect(self.cancel)
         self.btn_apply.clicked.connect(self.apply)
 
+        # Menu selection buttons
         self.btn_code_preferences.clicked.connect(
             lambda: self.stack_topics.setCurrentWidget(self.code_preferences_settings)
         )
@@ -287,12 +321,16 @@ class PreferencesMenu(QtWrappers.MainWindow):
         self.btn_refresh.clicked.connect(
             lambda: self.stack_topics.setCurrentWidget(self.refresh_settings)
         )
+        self.btn_theme.clicked.connect(
+            lambda: self.stack_topics.setCurrentWidget(self.theme_settings)
+        )
 
     def _sync_settings(self) -> None:
         self.code_preferences_settings.sync_settings()
         self.python_code_color_settings.sync_settings()
         self.json_code_color_settings.sync_settings()
         self.refresh_settings.sync_settings()
+        self.theme_settings.sync_settings()
 
     def ok(self) -> None:
         self._sync_settings()

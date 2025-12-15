@@ -6,6 +6,7 @@ widget housing all window components.
 """
 
 
+from pathlib import Path
 from typing import Optional
 
 import PySide6TK.shapes
@@ -23,6 +24,7 @@ from solaire.core import status_bar
 from solaire.core import editor_tabs
 from solaire.core import toolbar
 from solaire.core import output_tabs
+from solaire.core import theme
 
 
 
@@ -97,6 +99,11 @@ class SolaireClientWindow(QtWrappers.MainWindow):
             'toggle_full_screen',
             self.toggle_fullscreen
         )
+        broker.register_subscriber(
+            'SYSTEM',
+            'PREFERENCES_UPDATED',
+            self.update_theme
+        )
 
         self.widget_main = SolaireClientWidget()
         self.setCentralWidget(self.widget_main)
@@ -106,10 +113,17 @@ class SolaireClientWindow(QtWrappers.MainWindow):
         self.status_bar = status_bar.StatusBar(self)
         self.addToolBar(QtCore.Qt.ToolBarArea.BottomToolBarArea, self.status_bar)
 
-    def toggle_fullscreen(self, _: broker.Event) -> None:
+        self.update_theme()
+
+    def toggle_fullscreen(self, _: broker.Event = broker.DUMMY_EVENT) -> None:
         if not self._is_fullscreen:
             self.showFullScreen()
         else:
             self.showNormal()
 
         self._is_fullscreen = not self._is_fullscreen
+
+    def update_theme(self, _: broker.Event = broker.DUMMY_EVENT) -> None:
+        loaded_theme = appdata.Preferences().theme.theme_file
+        theme_file = Path(theme.default_themes[loaded_theme])
+        QtWrappers.set_style(self, theme_file)

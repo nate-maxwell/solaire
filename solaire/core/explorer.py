@@ -54,8 +54,14 @@ class ExplorerWidget(QtWidgets.QWidget):
             self.toggle_structure_explorer_visibility
         )
 
-    def toggle_file_explorer_visibility(self, _: broker.Event) -> None:
+    def toggle_file_explorer_visibility(
+            self,
+            _: broker.Event = broker.DUMMY_EVENT
+    ) -> None:
         self.file_explorer.setVisible(not self.file_explorer.isVisible())
 
-    def toggle_structure_explorer_visibility(self, _: broker.Event) -> None:
+    def toggle_structure_explorer_visibility(
+            self,
+            _: broker.Event = broker.DUMMY_EVENT
+    ) -> None:
         self.structure_explorer.setVisible(not self.structure_explorer.isVisible())

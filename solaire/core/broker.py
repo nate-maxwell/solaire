@@ -31,6 +31,16 @@ class Event(object):
     """The payload data - file path, timestamp, etc."""
 
 
+DUMMY_EVENT = Event('', '')
+"""
+A blank event for functions that do not require payload data but would like to
+subscribe to an event.
+
+This can be used as the default arg so that the same function can be called
+independently of event triggering.
+"""
+
+
 BROKER_SOURCE = 'BROKER'
 """A source for broker observability and maintenance."""
 
@@ -77,6 +87,7 @@ class EventBroker(types.ModuleType):
     """Primary event coordinator."""
 
     Event = Event  # Closure to keep Event type valid at runtime.
+    DUMMY_EVENT = DUMMY_EVENT  # Closure to keep valid at runtime.
 
     def __init__(self, name: str) -> None:
         super().__init__(name)

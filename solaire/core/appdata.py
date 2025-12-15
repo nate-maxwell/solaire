@@ -13,6 +13,8 @@ from typing import Any
 from typing import Optional
 from typing import Union
 
+from PySide6TK import QtWrappers
+
 from solaire.core import broker
 
 JSON_TYPE = Union[dict, list, int, float, bool, str, None]
@@ -30,12 +32,12 @@ class AppdataError(Exception):
 
 def export_data_to_json(path: Path, data: dict, overwrite: bool = False) -> None:
     """
-    Export dict to json file path.
+    Export dict to JSON file path.
 
     Args:
         path (Path): the file path to place the .json file.
         data (dict): the data to export into the .json file.
-        overwrite (bool): to overwrite json file if it already exists in path.
+        overwrite (bool): to overwrite JSON file if it already exists in path.
             Defaults to False.
     """
     if not path.exists() or overwrite:
@@ -50,9 +52,9 @@ def import_data_from_json(filepath: Path) -> Optional[dict]:
     Import data from a .json file.
 
     Args:
-        filepath (Path): the filepath to the json file to extract data from.
+        filepath (Path): the filepath to the JSON file to extract data from.
     Returns:
-        Optional[dict]: will return data if json file exists, else None.
+        Optional[dict]: will return data if JSON file exists, else None.
     """
     if os.path.exists(filepath):
         with open(filepath) as file:
@@ -109,6 +111,12 @@ class Refresh(object):
     code_fold: int = 600
 
 
+@dataclass
+class Theme(object):
+    """Theme and color management."""
+    theme_file: str = 'COMBINEAR'
+
+
 # -----Primary Preferences-----------------------------------------------------
 
 class Preferences(object):
@@ -138,6 +146,7 @@ class Preferences(object):
         self.python_code_color: PythonCodeColor = PythonCodeColor()
         self.json_code_color: JsonCodeColor = JsonCodeColor()
         self.refresh: Refresh = Refresh()
+        self.theme: Theme = Theme()
 
         # First-time load from disk (if present), else create defaults
         if SOLAIRE_PREFERENCES_PATH.exists():
@@ -152,6 +161,7 @@ class Preferences(object):
             'python_code_color': asdict(self.python_code_color),
             'json_code_color': asdict(self.json_code_color),
             'refresh': asdict(self.refresh),
+            'theme': asdict(self.theme)
         }
 
     def from_dict(self, data: dict[str, JSON_TYPE]) -> None:
@@ -164,6 +174,8 @@ class Preferences(object):
             self.json_code_color = JsonCodeColor(**data['json_code_color'])
         if 'refresh' in data:
             self.refresh = Refresh(**data['refresh'])
+        if 'theme' in data:
+            self.theme = Theme(**data['theme'])
 
     def load(self) -> None:
         """

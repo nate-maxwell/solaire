@@ -12,7 +12,6 @@ import PySide6TK.text
 from PySide6 import QtCore
 from PySide6 import QtGui
 from PySide6 import QtWidgets
-from PySide6TK.QtWrappers import CodeMiniMap
 
 from solaire.core import appdata
 from solaire.core import broker
@@ -21,6 +20,7 @@ from solaire.core import timers
 from solaire.core.code_editor import completion
 from solaire.core.code_editor import folding
 from solaire.core.code_editor import line_number
+from solaire.core.code_editor.minimap import CodeMiniMap
 from solaire.core.languages.python_syntax import PythonHighlighter
 from solaire.core.languages.python_syntax import reload_color_scheme
 
