@@ -216,8 +216,8 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self._cursor_timer = timers.create_bind_and_start_timer(
             self,
             prefs.cursor,
-            self.cursorPositionChanged,
-            self._emit_cursor_position
+            self._emit_cursor_position,
+            self.cursorPositionChanged
         )
 
     def _create_autosuggestions(self) -> None:
@@ -231,10 +231,13 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self._pending_completion_args = None
 
         # -----Debounce-----
-        self._completion_timer = QtCore.QTimer(self)
-        self._completion_timer.setSingleShot(True)
-        self._completion_timer.setInterval(120)
-        self._completion_timer.timeout.connect(self._kickoff_completion)
+        self._completion_timer = timers.create_bind_and_start_timer(
+            self,
+            120,
+            self._kickoff_completion,
+            None,
+            True
+        )
 
         # ---- Worker thread ----
         self._completion_bridge = completion.CompletionBridge()
@@ -353,8 +356,8 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self._fold_timer = timers.create_bind_and_start_timer(
             self,
             prefs.code_fold,
-            self.document().contentsChanged,
-            self.analyze_fold_regions
+            self.analyze_fold_regions,
+            self.document().contentsChanged
         )
 
     def analyze_fold_regions(self) -> None:
