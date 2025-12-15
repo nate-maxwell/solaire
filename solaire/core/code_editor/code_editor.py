@@ -222,7 +222,8 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
 
     def _create_autosuggestions(self) -> None:
         self._completer_popup = completion.CodeCompletionPopup(self)
-        self._completer_popup.activated.connect(self._insert_completion)
+        if appdata.Preferences().code_preferences.enable_auto_suggest:
+            self._completer_popup.activated.connect(self._insert_completion)
         self.cursorPositionChanged.connect(self._maybe_hide_popup)
         self.textChanged.connect(self._maybe_trigger_completions)
 
@@ -939,7 +940,8 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
 
         # Show quickly; keep editor focused for smooth typing
         gp, w = self._popup_position()
-        self._completer_popup.show_completions(names, gp, w)
+        if appdata.Preferences().code_preferences.enable_auto_suggest:
+            self._completer_popup.show_completions(names, gp, w)
 
     def _maybe_hide_popup(self) -> None:
         # Hide when caret moves to a different line or popup would overlap oddly

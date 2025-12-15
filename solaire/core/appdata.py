@@ -75,6 +75,7 @@ class CodePreferences(object):
     tab_space_width: int = 4
     enable_vertical_guide: bool = True
     guide_column: int = 80
+    enable_auto_suggest: bool = True
 
 
 @dataclass

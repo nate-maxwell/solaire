@@ -15,6 +15,10 @@ from PySide6TK import QtWrappers
 from solaire.core import appdata
 
 
+ENABLED = 'Enabled'
+DISABLED = 'Disabled'
+
+
 class PreferenceTopicMenu(QtWrappers.GroupBox):
 
     def __init__(self, name: str) -> None:
@@ -46,13 +50,27 @@ class CodePreferencesMenu(PreferenceTopicMenu):
         self.tab_space_width.set_value(self.topic_prefs.tab_space_width)
         self.add_widget(self.tab_space_width)
 
+        self.add_widget(QtWrappers.HorizontalLine())
+
         self.guide_column_enabled = QtWrappers.LabeledComboBox('Enable Vertical Guide')
-        self.guide_column_enabled.add_items(['Enabled', 'Disabled'])
+        self.guide_column_enabled.add_items([ENABLED, DISABLED])
+        enabled = ENABLED if self.topic_prefs.enable_vertical_guide else DISABLED
+        self.guide_column_enabled.set_current_text(enabled)
         self.add_widget(self.guide_column_enabled)
+
+        self.add_widget(QtWrappers.HorizontalLine())
 
         self.guide_column = QtWrappers.LabeledSpinBox('Vertical Guide Column')
         self.guide_column.set_value(self.topic_prefs.guide_column)
         self.add_widget(self.guide_column)
+
+        self.add_widget(QtWrappers.HorizontalLine())
+
+        self.auto_suggest = QtWrappers.LabeledComboBox('Enable Auto-Suggest')
+        self.auto_suggest.add_items([ENABLED, DISABLED])
+        enabled = ENABLED if self.topic_prefs.enable_auto_suggest else DISABLED
+        self.auto_suggest.set_current_text(enabled)
+        self.add_widget(self.auto_suggest)
 
         self.add_stretch()
 
@@ -60,9 +78,12 @@ class CodePreferencesMenu(PreferenceTopicMenu):
         self.topic_prefs.tab_type = self.tab_type.current_text()
         self.topic_prefs.tab_space_width = self.tab_space_width.value()
 
-        guide_enabled = self.guide_column_enabled.current_text() == 'Enabled'
+        guide_enabled = self.guide_column_enabled.current_text() == ENABLED
         self.topic_prefs.enable_vertical_guide = guide_enabled
         self.topic_prefs.guide_column = self.guide_column.value()
+
+        suggest_enabled = self.auto_suggest.current_text() == ENABLED
+        self.topic_prefs.enable_auto_suggest = suggest_enabled
 
 
 class PythonCodeColorMenu(PreferenceTopicMenu):
@@ -164,6 +185,8 @@ class RefreshPreferencesMenu(PreferenceTopicMenu):
         self.cursor = QtWrappers.LabeledSpinBox('Cursor')
         self.cursor.set_value(self.topic_prefs.cursor)
         self.add_widget(self.cursor)
+
+        self.add_widget(QtWrappers.HorizontalLine())
 
         self.code_fold = QtWrappers.LabeledSpinBox('Code Folding')
         self.code_fold.set_value(self.topic_prefs.code_fold)
