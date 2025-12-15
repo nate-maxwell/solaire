@@ -751,31 +751,33 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
                 QtCore.Qt.Key.Key_PageDown
             )
             if (
-                (mods & QtCore.Qt.KeyboardModifier.ShiftModifier)
-                and key in shift_nav_keys
+                    (mods & QtCore.Qt.KeyboardModifier.ShiftModifier)
+                    and key in shift_nav_keys
             ):
                 return super().keyPressEvent(event)
 
-            # Navigation & acceptance while popup is visible
-            if key in (QtCore.Qt.Key.Key_Down, QtCore.Qt.Key.Key_Tab):
-                if key == QtCore.Qt.Key.Key_Down:
-                    self._completer_popup.select_next()
-                else:
-                    self._insert_completion(
-                        self._completer_popup.current_text())
+            # Popup navigation
+            if key == QtCore.Qt.Key.Key_Down:
+                self._completer_popup.select_next()
                 return None
 
             if key == QtCore.Qt.Key.Key_Up:
                 self._completer_popup.select_prev()
                 return None
 
+            # TAB accepts the completion
+            if key == QtCore.Qt.Key.Key_Tab:
+                self._insert_completion(self._completer_popup.current_text())
+                return None
+
+            # Enter adds newline, does not accept suggestion - Only tab does.
             if key in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter):
-                pass
-            elif key == QtCore.Qt.Key.Key_Escape:
+                self._completer_popup.hide()
+                return super().keyPressEvent(event)
+
+            if key == QtCore.Qt.Key.Key_Escape:
                 self._completer_popup.hide()
                 return None
-            else:
-                pass
 
         # Toggle comment with Ctrl+/
         if (
@@ -783,11 +785,10 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
                 and event.modifiers() == QtCore.Qt.KeyboardModifier.ControlModifier
         ):
             self.toggle_comment()
-            # typing changed; popup may need to refresh
             self._maybe_trigger_completions()
             return None
 
-        # Should text be wrapped?
+        # Wrapping selection
         typed_char = event.text()
         if self.textCursor().hasSelection() and typed_char in _WRAPPING_PAIRS:
             self.wrap_selection(typed_char, _WRAPPING_PAIRS[typed_char])
@@ -810,7 +811,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             self._completer_popup.hide()
             return None
 
-        # Smart single-line Tab (when popup not visible): insert configured indent
+        # Smart single-line indent
         if event.key() == QtCore.Qt.Key.Key_Tab:
             self.insertPlainText(self._indent)
             self._completer_popup.hide()
@@ -820,11 +821,11 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         if event.key() in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter):
             cursor = self.textCursor()
             cursor.select(QtGui.QTextCursor.SelectionType.LineUnderCursor)
-            current_line = cursor.selectedText()
+            cur_line = cursor.selectedText()
 
-            base_indent_count = len(current_line) - len(current_line.lstrip(' '))
+            base_indent_count = len(cur_line) - len(cur_line.lstrip(' '))
             base_indent = ' ' * base_indent_count
-            extra = self._indent if current_line.rstrip().endswith(':') else ''
+            extra = self._indent if cur_line.rstrip().endswith(':') else ''
 
             super(CodeEditor, self).keyPressEvent(event)
             self.insertPlainText(base_indent + extra)
@@ -832,8 +833,6 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             return None
 
         super(CodeEditor, self).keyPressEvent(event)
-
-        # After normal typing, try to (re)show completions when it makes sense
         self._maybe_trigger_completions()
         return None
 

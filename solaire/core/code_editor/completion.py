@@ -55,8 +55,7 @@ class CodeCompletionPopup(QtWidgets.QFrame):
             self.hide()
             return
 
-        self._list.clearSelection()  # Start with NO selection by default
-        self._list.setCurrentRow(-1)
+        self._list.setCurrentRow(0)
 
         max_rows = min(12, self._list.count())
         row_height = self._list.sizeHintForRow(0) if self._list.count() else 18
@@ -65,7 +64,7 @@ class CodeCompletionPopup(QtWidgets.QFrame):
         self.move(at_global_pos)
         self.show()
 
-        # keep typing in the editor
+        # keep typing in editor
         p = self.parentWidget()
         if p is not None:
             p.setFocus(QtCore.Qt.FocusReason.OtherFocusReason)
