@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 import PySide6TK.text
+import jedi
 from PySide6 import QtCore
 from PySide6 import QtGui
 from PySide6 import QtWidgets
@@ -22,6 +23,8 @@ from solaire.core import timers
 from solaire.core.languages.python_syntax import PythonHighlighter
 from solaire.core.languages.python_syntax import reload_color_scheme
 
+
+optional_highlighter = Optional[languages.SyntaxHighlighter]
 
 _COMMENT_PREFIX = '# '
 
@@ -94,7 +97,77 @@ class LineNumberArea(QtWidgets.QWidget):
         self.editor.line_number_area_paint_event(event)
 
 
-optional_highlighter = Optional[languages.SyntaxHighlighter]
+class CodeCompletionPopup(QtWidgets.QFrame):
+    """Lightweight popup for code completions."""
+    activated = QtCore.Signal(str)  # emits the chosen completion text
+
+    def __init__(self, parent: QtWidgets.QWidget) -> None:
+        super().__init__(parent, QtCore.Qt.WindowType.ToolTip)
+        self.setWindowFlag(QtCore.Qt.WindowType.FramelessWindowHint, True)
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
+        self.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
+
+        self.setObjectName('CodeCompletionPopup')
+        self.setFrameStyle(
+            QtWidgets.QFrame.Shape.Box |
+            QtWidgets.QFrame.Shadow.Plain
+        )
+
+        self._list = QtWidgets.QListWidget(self)
+        self._list.setUniformItemSizes(True)
+        self._list.setHorizontalScrollBarPolicy(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self._list.setSelectionMode(
+            QtWidgets.QAbstractItemView.SelectionMode.SingleSelection
+        )
+
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self._list)
+
+        self._list.itemActivated.connect(self._on_item_activated)
+
+    def show_completions(
+            self,
+            items: list[str],
+            at_global_pos: QtCore.QPoint,
+            width_px: int
+    ) -> None:
+        self._list.clear()
+        for s in items:
+            self._list.addItem(s)
+
+        if not items:
+            self.hide()
+            return
+
+        self._list.setCurrentRow(0)
+        max_height = min(12, self._list.count()) * self._list.sizeHintForRow(0) + 6
+        self.resize(width_px, max_height)
+        self.move(at_global_pos)
+        self.show()
+
+        # keep typing in the editor
+        p = self.parentWidget()
+        if p is not None:
+            p.setFocus(QtCore.Qt.FocusReason.OtherFocusReason)
+
+    def current_text(self) -> str:
+        it = self._list.currentItem()
+        return '' if it is None else it.text()
+
+    def select_next(self) -> None:
+        row = (self._list.currentRow() + 1) % max(1, self._list.count())
+        self._list.setCurrentRow(row)
+
+    def select_prev(self) -> None:
+        row = (self._list.currentRow() - 1) % max(1, self._list.count())
+        self._list.setCurrentRow(row)
+
+    def _on_item_activated(self, item: QtWidgets.QListWidgetItem) -> None:
+        self.activated.emit(item.text())
+        self.hide()
 
 
 class CodeEditor(QtWidgets.QPlainTextEdit):
@@ -174,6 +247,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self._create_subscriptions()
         self._create_fold_analyzer()
         self._create_cursor_timer()
+        self._create_autosuggestions()
         self.update_line_number_area_width(0)
 
         self.syntax_highlighter_cls = syntax_highlighter_cls
@@ -247,6 +321,10 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         super().paintEvent(event)
         self._paint_guide()
 
+    def focusOutEvent(self, e: QtGui.QFocusEvent) -> None:
+        self._completer_popup.hide()
+        super().focusOutEvent(e)
+
     def jump_to_line(self, line_number: int) -> None:
         """Jump to a specific line in the editor."""
         cursor = self.textCursor()
@@ -271,6 +349,12 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             self.cursorPositionChanged,
             self._emit_cursor_position
         )
+
+    def _create_autosuggestions(self) -> None:
+        self._completer_popup = CodeCompletionPopup(self)
+        self._completer_popup.activated.connect(self._insert_completion)
+        self.cursorPositionChanged.connect(self._maybe_hide_popup)
+        self.textChanged.connect(self._maybe_trigger_completions)
 
     def _on_preferences_updated(self, _: broker.Event) -> None:
         reload_color_scheme()
@@ -757,16 +841,43 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             self.insertPlainText(opening)
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
-        """Enable shortcuts in keypress event."""
+        """Enable shortcuts in keypress event + code completion handling."""
+        # If popup visible: handle navigation/acceptance first
+        if self._completer_popup.isVisible():
+            key = event.key()
+            if key in (QtCore.Qt.Key.Key_Down, QtCore.Qt.Key.Key_Tab):
+                if key == QtCore.Qt.Key.Key_Down:
+                    self._completer_popup.select_next()
+                else:  # Tab accepts
+                    self._insert_completion(
+                        self._completer_popup.current_text())
+                return
+            if key == QtCore.Qt.Key.Key_Up:
+                self._completer_popup.select_prev()
+                return
+            if key in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter):
+                self._insert_completion(
+                    self._completer_popup.current_text())
+                return
+            if key == QtCore.Qt.Key.Key_Escape:
+                self._completer_popup.hide()
+                return
+
         # Toggle comment with Ctrl+/
-        if event.key() == QtCore.Qt.Key.Key_Slash and event.modifiers() == QtCore.Qt.KeyboardModifier.ControlModifier:
+        if (
+                event.key() == QtCore.Qt.Key.Key_Slash
+                and event.modifiers() == QtCore.Qt.KeyboardModifier.ControlModifier
+        ):
             self.toggle_comment()
+            # typing changed; popup may need to refresh
+            self._maybe_trigger_completions()
             return
 
         # Should text be wrapped?
         typed_char = event.text()
         if self.textCursor().hasSelection() and typed_char in _WRAPPING_PAIRS:
             self.wrap_selection(typed_char, _WRAPPING_PAIRS[typed_char])
+            self._maybe_trigger_completions()
             return
 
         first_line, last_line = self._get_selection_range()
@@ -775,35 +886,163 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         if event.key() == QtCore.Qt.Key.Key_Tab and last_line - first_line:
             lines = range(first_line, last_line + 1)
             self.indented.emit(lines)
+            self._completer_popup.hide()
             return
 
         # Multi-line unindent
         if event.key() == QtCore.Qt.Key.Key_Backtab:
             lines = range(first_line, last_line + 1)
             self.unindented.emit(lines)
+            self._completer_popup.hide()
             return
 
-        # Tab as 4 spaces
+        # Smart single-line Tab (when popup not visible): insert configured indent
         if event.key() == QtCore.Qt.Key.Key_Tab:
             self.insertPlainText(self._indent)
+            self._completer_popup.hide()
             return
 
-        # Enter indentation handling (preserve current indent; if line ends with ':', indent one extra level).
+        # Enter indentation handling (preserve current indent; colon adds level)
         if event.key() in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter):
             cursor = self.textCursor()
             cursor.select(QtGui.QTextCursor.SelectionType.LineUnderCursor)
             current_line = cursor.selectedText()
 
-            # Base indent equals current line's leading spaces
             base_indent_count = len(current_line) - len(current_line.lstrip(' '))
             base_indent = ' ' * base_indent_count
-
-            # If the logical line ends with a colon, indent to the next level
             extra = self._indent if current_line.rstrip().endswith(':') else ''
 
-            # Insert newline via parent, then insert computed indentation
             super(CodeEditor, self).keyPressEvent(event)
             self.insertPlainText(base_indent + extra)
+            self._completer_popup.hide()
             return
 
+        # Default behavior
         super(CodeEditor, self).keyPressEvent(event)
+
+        # After normal typing, try to (re)show completions when it makes sense
+        self._maybe_trigger_completions()
+
+    # -----Completion Suggestion------------------------------------------------
+
+    def _current_prefix(self) -> str:
+        """Return the [A-Za-z0-9_]+ prefix immediately left of the caret, safely."""
+        cur = self.textCursor()
+        line_text = cur.block().text()  # robust: never shorter than selection quirks
+        col = cur.columnNumber()  # 0-based column within the line
+
+        if col <= 0 or not line_text:
+            return ''
+
+        i = col - 1
+        # Walk left while identifier characters
+        while i >= 0:
+            ch = \
+            line_text[
+                i]
+            if ch.isalnum() or ch == '_':
+                i -= 1
+                continue
+            break
+
+        return line_text[
+            i + 1:col]
+
+    def _document_text_and_cursor(self) -> tuple[str, int, int]:
+        """Return (full_text, 1-based line, 1-based col) for jedi."""
+        text = self.document().toPlainText()
+        cur = self.textCursor()
+        line = cur.blockNumber() + 1
+        col = cur.columnNumber()
+        return text, line, col
+
+    def _popup_position(self) -> tuple[QtCore.QPoint, int]:
+        """Return (global_point_below_caret, width_px) for popup."""
+        r = self.cursorRect()
+        below = QtCore.QPoint(r.left(), r.bottom())
+        global_pt = self.viewport().mapToGlobal(below)
+        # Reasonable width: 30 'M' chars
+        width_px = int(QtGui.QFontMetrics(self.font()).horizontalAdvance('M') * 30)
+        return global_pt, width_px
+
+    @staticmethod
+    def _dedupe_ordered(seq: list[str]) -> list[str]:
+        seen = set()
+        out = []
+        for s in seq:
+            if s not in seen:
+                seen.add(s)
+                out.append(s)
+        return out
+
+    def _maybe_trigger_completions(self) -> None:
+        if self.isReadOnly():
+            self._completer_popup.hide()
+            return
+
+        prefix = self._current_prefix()
+        ch_left = self._char_left_of_caret()
+
+        if not prefix and ch_left != '.':
+            self._completer_popup.hide()
+            return
+
+        try:
+            text, line, col = self._document_text_and_cursor()
+            script = jedi.Script(code=text)
+            comps = script.complete(line=line, column=col)
+            names = []
+            for c in comps:
+                n = c.name
+                try:
+                    sigs = c.get_signatures()
+                    if sigs:
+                        n = f'{n}{sigs[0].to_string()[len(c.name):]}'
+                except Exception:
+                    pass
+                names.append(n)
+            names = self._dedupe_ordered(names)
+            if not names:
+                self._completer_popup.hide()
+                return
+
+            gp, w = self._popup_position()
+            self._completer_popup.show_completions(names, gp, w)
+        except Exception:
+            self._completer_popup.hide()
+
+    def _char_left_of_caret(self) -> str:
+        cur = self.textCursor()
+        line_text = cur.block().text()
+        col = cur.columnNumber()
+        if col <= 0 or not line_text:
+            return ''
+        return line_text[col - 1]
+
+    def _maybe_hide_popup(self) -> None:
+        # Hide when caret moves to a different line or popup would overlap oddly
+        if not self._completer_popup.isVisible():
+            return
+        # Reposition to follow the caret
+        gp, w = self._popup_position()
+        self._completer_popup.move(gp)
+
+    def _insert_completion(self, chosen: str) -> None:
+        """
+        Insert only the remaining text after the current prefix.
+        Handles function call snippets like 'func(param)' by inserting name first.
+        """
+        # If the item looks like 'name(params...)', only complete 'name' here.
+        name_only = chosen.split('(', 1)[0] if '(' in chosen else chosen
+
+        prefix = self._current_prefix()
+        remainder = name_only[len(prefix):] if name_only.startswith(prefix) else name_only
+
+        if not remainder:
+            self._completer_popup.hide()
+            return
+
+        with PySide6TK.text.PlainTextUndoBlock(self):
+            self.insertPlainText(remainder)
+
+        self._completer_popup.hide()
