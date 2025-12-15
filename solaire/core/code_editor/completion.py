@@ -109,4 +109,10 @@ class CompletionWorker(QtCore.QObject):
 
 
 class CompletionBridge(QtCore.QObject):
-    request = QtCore.Signal(str, int, int, int)  # code, line, col, job_id
+    """
+    A Qt signal relay object whose only job is to safely deliver completion
+    requests from the GUI thread into a worker thread.
+    Specifically for Jedi code completion.
+    """
+    # code, line, col, job_id
+    request = QtCore.Signal(str, int, int, int)

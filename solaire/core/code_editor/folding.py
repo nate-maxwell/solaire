@@ -1,3 +1,9 @@
+"""
+Widget for code fold marking in a QPlainTextEdit code editor.
+The editor itself is responsible for fold detection.
+"""
+
+
 from dataclasses import dataclass
 
 from PySide6 import QtCore
@@ -14,7 +20,18 @@ class FoldRegion:
 
 
 class FoldArea(QtWidgets.QWidget):
-    """Widget for displaying fold indicators."""
+    """
+    Widget for displaying fold indicators. A gutter widget similar to the
+    ``LineNumberArea`` widget.
+    To be inserted into the margins of a QPlainTextEdit ``CodeEditor``.
+    The code editor is responsible for fold detection as fold areas can differ
+    from language to language.
+
+    Notes:
+        - ``sizeHint()`` is the width allocated for the drawn fold markers.
+        - Block numbers are associated with the ``mouseMouseEvent()`` and
+        ``mousePressEvent()``.
+    """
 
     def __init__(self, code_editor: 'CodeEditor') -> None:
         super().__init__(code_editor)
