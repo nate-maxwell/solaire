@@ -734,6 +734,29 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         """Enable shortcuts in keypress event + code completion handling."""
+        if self._completer_popup.isVisible():
+            mods = event.modifiers()
+            key = event.key()
+
+            # Give Shift+navigation back to the editor (even with Ctrl held)
+            SHIFT_NAV_KEYS = (
+                QtCore.Qt.Key.Key_Left,
+                QtCore.Qt.Key.Key_Right,
+                QtCore.Qt.Key.Key_Up,
+                QtCore.Qt.Key.Key_Down,
+                QtCore.Qt.Key.Key_Home,
+                QtCore.Qt.Key.Key_End,
+                QtCore.Qt.Key.Key_PageUp,
+                QtCore.Qt.Key.Key_PageDown
+            )
+            if (
+                    mods & QtCore.Qt.KeyboardModifier.ShiftModifier) and key in SHIFT_NAV_KEYS:
+                super().keyPressEvent(
+                    event)  # extend/move selection in the editor
+                # keep popup; don’t hide while selecting
+                self._maybe_trigger_completions()
+                return
+
         # If popup visible: handle navigation/acceptance first
         if self._completer_popup.isVisible():
             key = event.key()
@@ -748,8 +771,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
                 self._completer_popup.select_prev()
                 return
             if key in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter):
-                self._insert_completion(
-                    self._completer_popup.current_text())
+                self._insert_completion(self._completer_popup.current_text())
                 return
             if key == QtCore.Qt.Key.Key_Escape:
                 self._completer_popup.hide()
