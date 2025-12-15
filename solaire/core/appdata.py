@@ -175,7 +175,7 @@ class Preferences(object):
     def save(self) -> None:
         """
         Save current data to user's appdata folder.
-        Emit event signalling a potential update to preference data.
+        Emit event signaling a potential update to preference data.
         Emitted data is None as the preference singleton can be accessed from
         anywhere.
         """
