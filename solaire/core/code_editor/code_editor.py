@@ -9,7 +9,6 @@ Uses a regex syntax highlighter.
 from typing import Optional
 
 import PySide6TK.text
-import jedi
 from PySide6 import QtCore
 from PySide6 import QtGui
 from PySide6 import QtWidgets
@@ -19,11 +18,11 @@ from solaire.core import appdata
 from solaire.core import broker
 from solaire.core import languages
 from solaire.core import timers
+from solaire.core.code_editor import completion
+from solaire.core.code_editor import folding
+from solaire.core.code_editor import line_number
 from solaire.core.languages.python_syntax import PythonHighlighter
 from solaire.core.languages.python_syntax import reload_color_scheme
-from solaire.core.code_editor import completion
-from solaire.core.code_editor import line_number
-from solaire.core.code_editor import folding
 
 
 optional_highlighter = Optional[languages.SyntaxHighlighter]
@@ -108,6 +107,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self.fold_area = folding.FoldArea(self)
         self._fold_regions: dict[int, folding.FoldRegion] = {}
         self.fold_area_width = 16
+        self._last_minimap_block = 0
 
         # Add minimap to the right side
         self.minimap = CodeMiniMap(self, self)
@@ -195,14 +195,14 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self._completer_popup.hide()
         super().focusOutEvent(e)
 
-    def jump_to_line(self, line_number: int) -> None:
+    def jump_to_line(self, line_no: int) -> None:
         """Jump to a specific line in the editor."""
         cursor = self.textCursor()
         cursor.movePosition(cursor.MoveOperation.Start)
         cursor.movePosition(
             cursor.MoveOperation.Down,
             cursor.MoveMode.MoveAnchor,
-            line_number - 1
+            line_no - 1
         )
         self.setTextCursor(cursor)
         self.setFocus()
@@ -537,7 +537,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         painter.fillRect(event.rect(), QtGui.QColor(21, 21, 21))  # Background color
 
         block = self.firstVisibleBlock()
-        blockNumber = block.blockNumber()
+        block_number = block.blockNumber()
         block_geo = self.blockBoundingGeometry(block)
         top = block_geo.translated(self.contentOffset()).top()
         bottom = top + self.blockBoundingRect(block).height()
@@ -545,7 +545,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         height = self.fontMetrics().height()
         while block.isValid() and (top <= event.rect().bottom()):
             if block.isVisible() and (bottom >= event.rect().top()):
-                number = str(blockNumber + 1)
+                number = str(block_number + 1)
                 painter.setPen(QtGui.QColor('lightGray'))
                 painter.drawText(
                     0,
@@ -559,7 +559,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             block = block.next()
             top = bottom
             bottom = top + self.blockBoundingRect(block).height()
-            blockNumber += 1
+            block_number += 1
 
     def _emit_cursor_position(self) -> None:
         """On cursor position change, update the highlighted line to the new
@@ -583,7 +583,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             self.setExtraSelections([])
             return
 
-        extraSelections = []
+        extra_selections = []
         selection = QtWidgets.QTextEdit.ExtraSelection()
 
         fmt = QtGui.QTextCharFormat()
@@ -593,8 +593,8 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
 
         selection.cursor = self.textCursor()
         selection.cursor.clearSelection()
-        extraSelections.append(selection)
-        self.setExtraSelections(extraSelections)
+        extra_selections.append(selection)
+        self.setExtraSelections(extra_selections)
 
     # -----Code Formatting-----------------------------------------------------
 
@@ -785,14 +785,14 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             self.toggle_comment()
             # typing changed; popup may need to refresh
             self._maybe_trigger_completions()
-            return
+            return None
 
         # Should text be wrapped?
         typed_char = event.text()
         if self.textCursor().hasSelection() and typed_char in _WRAPPING_PAIRS:
             self.wrap_selection(typed_char, _WRAPPING_PAIRS[typed_char])
             self._maybe_trigger_completions()
-            return
+            return None
 
         first_line, last_line = self._get_selection_range()
 
@@ -801,20 +801,20 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             lines = range(first_line, last_line + 1)
             self.indented.emit(lines)
             self._completer_popup.hide()
-            return
+            return None
 
         # Multi-line unindent
         if event.key() == QtCore.Qt.Key.Key_Backtab:
             lines = range(first_line, last_line + 1)
             self.unindented.emit(lines)
             self._completer_popup.hide()
-            return
+            return None
 
         # Smart single-line Tab (when popup not visible): insert configured indent
         if event.key() == QtCore.Qt.Key.Key_Tab:
             self.insertPlainText(self._indent)
             self._completer_popup.hide()
-            return
+            return None
 
         # Enter indentation handling (preserve current indent; colon adds level)
         if event.key() in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter):
@@ -829,12 +829,13 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             super(CodeEditor, self).keyPressEvent(event)
             self.insertPlainText(base_indent + extra)
             self._completer_popup.hide()
-            return
+            return None
 
         super(CodeEditor, self).keyPressEvent(event)
 
         # After normal typing, try to (re)show completions when it makes sense
         self._maybe_trigger_completions()
+        return None
 
     # -----Completion Suggestion------------------------------------------------
 
