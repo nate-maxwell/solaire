@@ -16,7 +16,7 @@ from PySide6 import QtWidgets
 from solaire.core import broker
 from solaire.core import evaluator
 from solaire.core import languages
-from solaire.core.code_editor import CodeEditor
+from solaire.core.code_editor.code_editor import CodeEditor
 
 
 class DraggableTabBar(QtWidgets.QTabBar):
