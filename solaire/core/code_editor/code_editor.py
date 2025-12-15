@@ -750,10 +750,11 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
                 QtCore.Qt.Key.Key_PageDown
             )
             if (
-                    mods & QtCore.Qt.KeyboardModifier.ShiftModifier) and key in SHIFT_NAV_KEYS:
-                super().keyPressEvent(
-                    event)  # extend/move selection in the editor
-                # keep popup; don’t hide while selecting
+                    (mods & QtCore.Qt.KeyboardModifier.ShiftModifier)
+                    and key in SHIFT_NAV_KEYS
+                ):
+                super().keyPressEvent(event)  # move selection in the editor
+                # keep popup while editing
                 self._maybe_trigger_completions()
                 return
 
