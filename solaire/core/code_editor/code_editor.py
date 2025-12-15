@@ -234,12 +234,10 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self._completion_timer = timers.create_bind_and_start_timer(
             self,
             120,
-            self._kickoff_completion,
-            None,
-            True
+            self._kickoff_completion
         )
 
-        # ---- Worker thread ----
+        # -----Debounce worker thread-----
         self._completion_bridge = completion.CompletionBridge()
         self._completion_thread = QtCore.QThread(self)
         self._completion_worker = completion.CompletionWorker()
@@ -839,13 +837,13 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self._maybe_trigger_completions()
         return None
 
-    # -----Completion Suggestion------------------------------------------------
+    # -----Completion Suggestion-----------------------------------------------
 
     def _current_prefix(self) -> str:
         """Return the [A-Za-z0-9_]+ prefix immediately left of the caret, safely."""
         cur = self.textCursor()
-        line_text = cur.block().text()  # robust: never shorter than selection quirks
-        col = cur.columnNumber()  # 0-based column within the line
+        line_text = cur.block().text()
+        col = cur.columnNumber()
 
         if col <= 0 or not line_text:
             return ''
@@ -925,7 +923,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         text, line, col = self._pending_completion_args
         job_id = self._completion_job_id
 
-        # Queue the job to the worker thread
+        # Queue the job to worker thread
         self._completion_bridge.request.emit(text, line, col, job_id)
 
     @QtCore.Slot(int, list)
@@ -954,7 +952,8 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
     def _insert_completion(self, chosen: str) -> None:
         """
         Insert only the remaining text after the current prefix.
-        Handles function call snippets like 'func(param)' by inserting name first.
+        Handles function call snippets like 'func(param)' by inserting name
+        first.
         """
         # If the item looks like 'name(params...)', only complete 'name' here.
         name_only = chosen.split('(', 1)[0] if '(' in chosen else chosen

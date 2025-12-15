@@ -18,7 +18,8 @@ from solaire.components import preferences
 class SolaireToolbar(QtWrappers.Toolbar):
     def __init__(self, parent: QtWidgets.QWidget) -> None:
         super().__init__('SolaireToolbar', parent)
-        self.setFixedHeight(22)
+        self.setMinimumHeight(22)
+        self.setMaximumHeight(26)
         self.setStyleSheet("""
             QToolButton::menu-indicator {
                 image: none;
