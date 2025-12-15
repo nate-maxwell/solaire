@@ -58,8 +58,6 @@ class CodePreferencesMenu(PreferenceTopicMenu):
         self.guide_column_enabled.set_current_text(enabled)
         self.add_widget(self.guide_column_enabled)
 
-        self.add_widget(QtWrappers.HorizontalLine())
-
         self.guide_column = QtWrappers.LabeledSpinBox('Vertical Guide Column')
         self.guide_column.set_value(self.topic_prefs.guide_column)
         self.add_widget(self.guide_column)
@@ -71,6 +69,10 @@ class CodePreferencesMenu(PreferenceTopicMenu):
         enabled = ENABLED if self.topic_prefs.enable_auto_suggest else DISABLED
         self.auto_suggest.set_current_text(enabled)
         self.add_widget(self.auto_suggest)
+
+        self.suggestion_depth = QtWrappers.LabeledSpinBox('Suggestion Depth')
+        self.suggestion_depth.set_value(self.topic_prefs.suggestion_depth)
+        self.add_widget(self.suggestion_depth)
 
         self.add_stretch()
 
@@ -84,6 +86,8 @@ class CodePreferencesMenu(PreferenceTopicMenu):
 
         suggest_enabled = self.auto_suggest.current_text() == ENABLED
         self.topic_prefs.enable_auto_suggest = suggest_enabled
+
+        self.topic_prefs.suggestion_depth = self.suggestion_depth.value()
 
 
 class PythonCodeColorMenu(PreferenceTopicMenu):

@@ -76,6 +76,7 @@ class CodePreferences(object):
     enable_vertical_guide: bool = True
     guide_column: int = 80
     enable_auto_suggest: bool = True
+    suggestion_depth: int = 32
 
 
 @dataclass

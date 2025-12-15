@@ -7,6 +7,8 @@ import jedi
 from PySide6 import QtCore
 from PySide6 import QtWidgets
 
+from solaire.core import appdata
+
 
 class CodeCompletionPopup(QtWidgets.QFrame):
     """Lightweight popup for code completions."""
@@ -98,11 +100,12 @@ class CompletionWorker(QtCore.QObject):
 
     @QtCore.Slot(str, int, int, int)
     def request(self, text: str, line: int, col: int, job_id: int) -> None:
+        prefs = appdata.Preferences().code_preferences
         try:
             script = jedi.Script(code=text)
             comps = script.complete(line=line, column=col)
-            # Keep it light: names only, cap the list
-            names = [c.name for c in comps[:64]]
+            # optimization cap to items in the list
+            names = [c.name for c in comps[:prefs.suggestion_depth]]
         except Exception:
             names = []
         self.results.emit(job_id, names)
