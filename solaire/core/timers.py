@@ -1,9 +1,10 @@
 """
 Boilerplate and utilities for starting and managing QTimers.
 
-Honestly, this mostly exists because I keep forgetting all of the necessary
+Honestly, this mostly exists because I keep forgetting all the necessary
 settings on QTimers.
 """
+
 
 from typing import Any
 from typing import Callable
