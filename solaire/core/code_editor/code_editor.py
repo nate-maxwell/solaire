@@ -6,7 +6,6 @@ Uses a regex syntax highlighter.
 """
 
 
-from dataclasses import dataclass
 from typing import Optional
 
 import PySide6TK.text
@@ -22,6 +21,9 @@ from solaire.core import languages
 from solaire.core import timers
 from solaire.core.languages.python_syntax import PythonHighlighter
 from solaire.core.languages.python_syntax import reload_color_scheme
+from solaire.core.code_editor import completion
+from solaire.core.code_editor import line_number
+from solaire.core.code_editor import folding
 
 
 optional_highlighter = Optional[languages.SyntaxHighlighter]
@@ -36,138 +38,6 @@ _WRAPPING_PAIRS = {
     '{': '}',
     '`': '`',
 }
-
-
-@dataclass
-class _FoldRegion:
-    """Represents a foldable region in the document."""
-    start_block: int
-    end_block: int
-    is_folded: bool = False
-
-
-class FoldArea(QtWidgets.QWidget):
-    """Widget for displaying fold indicators."""
-
-    def __init__(self, code_editor: 'CodeEditor') -> None:
-        super().__init__(code_editor)
-        self.editor = code_editor
-        self.setMouseTracking(True)
-        self._hover_block = -1
-
-    def sizeHint(self) -> QtCore.QSize:
-        return QtCore.QSize(16, 0)
-
-    def paintEvent(self, event: QtGui.QPaintEvent) -> None:
-        self.editor.fold_area_paint_event(event)
-
-    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        block_number = self.editor.get_block_number_at_pos(event.pos().y())
-        if block_number != self._hover_block:
-            self._hover_block = block_number
-            self.update()
-
-    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        if event.button() == QtCore.Qt.MouseButton.LeftButton:
-            block_number = self.editor.get_block_number_at_pos(event.pos().y())
-            self.editor.toggle_fold(block_number)
-
-
-class LineNumberArea(QtWidgets.QWidget):
-    """
-    A side-gutter widget responsible for rendering line numbers for a
-    ``CodeEditor`` instance.
-
-    Notes:
-        - ``_LineNumberArea`` does not paint anything by itself; all
-          drawing is delegated back to the parent editor.
-        - ``sizeHint()`` returns a width based on the current block
-          count so the gutter resizes correctly as line numbers grow
-          into additional digits.
-    """
-
-    def __init__(self, code_editor: 'CodeEditor') -> None:
-        super().__init__(code_editor)
-        self.editor = code_editor
-
-    def sizeHint(self) -> QtCore.QSize:
-        return QtCore.QSize(self.editor.line_number_area_width, 0)
-
-    def paintEvent(self, event: QtGui.QPaintEvent) -> None:
-        self.editor.line_number_area_paint_event(event)
-
-
-class CodeCompletionPopup(QtWidgets.QFrame):
-    """Lightweight popup for code completions."""
-    activated = QtCore.Signal(str)  # emits the chosen completion text
-
-    def __init__(self, parent: QtWidgets.QWidget) -> None:
-        super().__init__(parent, QtCore.Qt.WindowType.ToolTip)
-        self.setWindowFlag(QtCore.Qt.WindowType.FramelessWindowHint, True)
-        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
-        self.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
-
-        self.setObjectName('CodeCompletionPopup')
-        self.setFrameStyle(
-            QtWidgets.QFrame.Shape.Box |
-            QtWidgets.QFrame.Shadow.Plain
-        )
-
-        self._list = QtWidgets.QListWidget(self)
-        self._list.setUniformItemSizes(True)
-        self._list.setHorizontalScrollBarPolicy(
-            QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff
-        )
-        self._list.setSelectionMode(
-            QtWidgets.QAbstractItemView.SelectionMode.SingleSelection
-        )
-
-        layout = QtWidgets.QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self._list)
-
-        self._list.itemActivated.connect(self._on_item_activated)
-
-    def show_completions(
-            self,
-            items: list[str],
-            at_global_pos: QtCore.QPoint,
-            width_px: int
-    ) -> None:
-        self._list.clear()
-        for s in items:
-            self._list.addItem(s)
-
-        if not items:
-            self.hide()
-            return
-
-        self._list.setCurrentRow(0)
-        max_height = min(12, self._list.count()) * self._list.sizeHintForRow(0) + 6
-        self.resize(width_px, max_height)
-        self.move(at_global_pos)
-        self.show()
-
-        # keep typing in the editor
-        p = self.parentWidget()
-        if p is not None:
-            p.setFocus(QtCore.Qt.FocusReason.OtherFocusReason)
-
-    def current_text(self) -> str:
-        it = self._list.currentItem()
-        return '' if it is None else it.text()
-
-    def select_next(self) -> None:
-        row = (self._list.currentRow() + 1) % max(1, self._list.count())
-        self._list.setCurrentRow(row)
-
-    def select_prev(self) -> None:
-        row = (self._list.currentRow() - 1) % max(1, self._list.count())
-        self._list.setCurrentRow(row)
-
-    def _on_item_activated(self, item: QtWidgets.QListWidgetItem) -> None:
-        self.activated.emit(item.text())
-        self.hide()
 
 
 class CodeEditor(QtWidgets.QPlainTextEdit):
@@ -234,9 +104,9 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             QtGui.QFontMetricsF(self.font()).horizontalAdvance(' ') * 4
         )
 
-        self.line_number_area = LineNumberArea(self)
-        self.fold_area = FoldArea(self)
-        self._fold_regions: dict[int, _FoldRegion] = {}
+        self.line_number_area = line_number.LineNumberArea(self)
+        self.fold_area = folding.FoldArea(self)
+        self._fold_regions: dict[int, folding.FoldRegion] = {}
         self.fold_area_width = 16
 
         # Add minimap to the right side
@@ -351,10 +221,32 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         )
 
     def _create_autosuggestions(self) -> None:
-        self._completer_popup = CodeCompletionPopup(self)
+        self._completer_popup = completion.CodeCompletionPopup(self)
         self._completer_popup.activated.connect(self._insert_completion)
         self.cursorPositionChanged.connect(self._maybe_hide_popup)
         self.textChanged.connect(self._maybe_trigger_completions)
+
+        self._completion_job_id: int = 0
+        self._pending_completion_args = None
+
+        # -----Debounce-----
+        self._completion_timer = QtCore.QTimer(self)
+        self._completion_timer.setSingleShot(True)
+        self._completion_timer.setInterval(120)
+        self._completion_timer.timeout.connect(self._kickoff_completion)
+
+        # ---- Worker thread ----
+        self._completion_bridge = completion.CompletionBridge()
+        self._completion_thread = QtCore.QThread(self)
+        self._completion_worker = completion.CompletionWorker()
+        self._completion_worker.moveToThread(self._completion_thread)
+
+        self._completion_bridge.request.connect(
+            self._completion_worker.request,
+            QtCore.Qt.ConnectionType.QueuedConnection
+        )
+        self._completion_worker.results.connect(self._on_completion_results)
+        self._completion_thread.start()
 
     def _on_preferences_updated(self, _: broker.Event) -> None:
         reload_color_scheme()
@@ -509,7 +401,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
                     next_block = next_block.next()
 
                 if end_block > start_block:
-                    self._fold_regions[start_block] = _FoldRegion(
+                    self._fold_regions[start_block] = folding.FoldRegion(
                         start_block=start_block,
                         end_block=end_block,
                         is_folded=False
@@ -542,7 +434,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
                             if close_block > open_block:
                                 # Register fold region
                                 # (Python ':' region may already exist — overwrite safely)
-                                self._fold_regions[open_block] = _FoldRegion(
+                                self._fold_regions[open_block] = folding.FoldRegion(
                                     start_block=open_block,
                                     end_block=close_block,
                                     is_folded=False
@@ -982,32 +874,16 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
 
         prefix = self._current_prefix()
         ch_left = self._char_left_of_caret()
-
         if not prefix and ch_left != '.':
             self._completer_popup.hide()
             return
 
+        # Prepare the latest request, but don't compute yet — debounce
         try:
             text, line, col = self._document_text_and_cursor()
-            script = jedi.Script(code=text)
-            comps = script.complete(line=line, column=col)
-            names = []
-            for c in comps:
-                n = c.name
-                try:
-                    sigs = c.get_signatures()
-                    if sigs:
-                        n = f'{n}{sigs[0].to_string()[len(c.name):]}'
-                except Exception:
-                    pass
-                names.append(n)
-            names = self._dedupe_ordered(names)
-            if not names:
-                self._completer_popup.hide()
-                return
-
-            gp, w = self._popup_position()
-            self._completer_popup.show_completions(names, gp, w)
+            self._pending_completion_args = (text, line, col)
+            self._completion_job_id += 1  # unique id for this intent
+            self._completion_timer.start()  # (re)start debounce
         except Exception:
             self._completer_popup.hide()
 
@@ -1018,6 +894,29 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         if col <= 0 or not line_text:
             return ''
         return line_text[col - 1]
+
+    def _kickoff_completion(self) -> None:
+        if not self._pending_completion_args:
+            return
+        text, line, col = self._pending_completion_args
+        job_id = self._completion_job_id
+
+        # Queue the job to the worker thread
+        self._completion_bridge.request.emit(text, line, col, job_id)
+
+    @QtCore.Slot(int, list)
+    def _on_completion_results(self, job_id: int, names: list) -> None:
+        # Drop stale results (user kept typing, new job id superseded)
+        if job_id != self._completion_job_id:
+            return
+
+        if not names:
+            self._completer_popup.hide()
+            return
+
+        # Show quickly; keep editor focused for smooth typing
+        gp, w = self._popup_position()
+        self._completer_popup.show_completions(names, gp, w)
 
     def _maybe_hide_popup(self) -> None:
         # Hide when caret moves to a different line or popup would overlap oddly
