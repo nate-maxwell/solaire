@@ -15,7 +15,8 @@ from solaire.core import structure_explorer
 
 
 class ExplorerWidget(QtWidgets.QWidget):
-    """Project file explorer. Supports creating and saving files and folders.
+    """
+    Project file explorer. Supports creating and saving files and folders.
     Creating folders will not affect the loaded project directory.
     """
 

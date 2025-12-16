@@ -56,21 +56,14 @@ class SolaireClientWidget(QtWidgets.QWidget):
         self.splitter_left = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
         self.splitter_left.setStyleSheet(splitter_style)
 
-        self.explorer_widget = QtWidgets.QWidget()
-        self.vlayout_explorers = QtWidgets.QVBoxLayout()
-        self.vlayout_explorers.setContentsMargins(0, 0, 0, 0)
         self.file_explorer = explorer.ExplorerWidget(self)
 
     def _create_layout(self) -> None:
-        self.explorer_widget.setLayout(self.vlayout_explorers)
-        self.vlayout_explorers.addWidget(self.file_explorer)
-        self.vlayout_explorers.addWidget(self.explorer_widget)
-
         self.splitter_bottom.addWidget(self.tab_editor)
         self.splitter_bottom.addWidget(self.tab_outputs)
         self.splitter_bottom.setSizes([(1080 - 200), 200])
 
-        self.splitter_left.addWidget(self.explorer_widget)
+        self.splitter_left.addWidget(self.file_explorer)
         self.splitter_left.addWidget(self.splitter_bottom)
         self.splitter_left.setSizes([(1920 - 1700), 1700])
 
