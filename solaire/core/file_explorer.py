@@ -11,6 +11,7 @@ from PySide6 import QtWidgets
 from PySide6TK import QtWrappers
 
 from solaire.core import broker
+from solaire.core import common_events
 
 
 class SolaireFileTree(QtWidgets.QWidget):
@@ -31,6 +32,7 @@ class SolaireFileTree(QtWidgets.QWidget):
 
         temp_path = Path(__file__).parent.parent.parent
         self.file_tree = QtWrappers.FileTreeWidget(temp_path, self)
+        common_events.directory_changed(temp_path)
 
     def _create_layout(self) -> None:
         self.setLayout(self.layout_main)

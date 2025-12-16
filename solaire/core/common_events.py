@@ -103,3 +103,9 @@ def flush_output() -> None:
     """Clears stdout and stderr. Emits None."""
     event = broker.Event('SYSTEM', 'FLUSH')
     broker.emit(event)
+
+
+def directory_changed(path: Path) -> None:
+    """Signal on directory changing. Payload is directory Path object."""
+    event = broker.Event('common_event', 'open_folder', path)
+    broker.emit(event)

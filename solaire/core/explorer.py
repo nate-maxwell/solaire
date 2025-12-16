@@ -1,7 +1,4 @@
-"""
-Project file explorer.
-QtWidget with nested QTreeView.
-"""
+"""Project, file, and code explorer."""
 
 
 from typing import Optional
@@ -12,6 +9,7 @@ from PySide6 import QtWidgets
 from solaire.core import broker
 from solaire.core import file_explorer
 from solaire.core import structure_explorer
+from solaire.core import project
 
 
 class ExplorerWidget(QtWidgets.QWidget):
@@ -32,6 +30,8 @@ class ExplorerWidget(QtWidgets.QWidget):
         self.layout_main.setContentsMargins(0, 0, 0, 0)
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
 
+        self.project_selector = project.ProjectSelector(self)
+
         self.file_explorer = file_explorer.SolaireFileTree(self)
         self.structure_explorer = structure_explorer.CodeStructureWidget(self)
         self.structure_explorer.setVisible(False)
@@ -41,6 +41,7 @@ class ExplorerWidget(QtWidgets.QWidget):
         self.splitter.addWidget(self.structure_explorer)
 
         self.setLayout(self.layout_main)
+        self.layout_main.addWidget(self.project_selector)
         self.layout_main.addWidget(self.splitter)
 
     def _create_subscriptions(self) -> None:
