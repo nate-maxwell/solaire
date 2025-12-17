@@ -3,6 +3,10 @@
 
 The primary application. This includes the Solaire main window, and primary
 widget housing all window components.
+
+Doubles as the primary startup process for the editor. The client main window
+loads and initializes all systems and then constructs all widgets that get
+placed on screen.
 """
 
 
@@ -39,6 +43,13 @@ QSplitter::handle:hover {
 
 
 class SolaireClientWidget(QtWidgets.QWidget):
+    """
+    The primary widget, and component widgets, within the client.
+
+    The client widget, and child component widgets, assume all editor systems
+    have been loaded and initialized.
+    """
+
     def __init__(self, parent: QtWidgets.QWidget = None) -> None:
         super().__init__(parent)
 
@@ -74,19 +85,39 @@ class SolaireClientWidget(QtWidgets.QWidget):
 
 
 class SolaireClientWindow(QtWrappers.MainWindow):
+    """
+    Primarily responsible for initializing all system logic before assembling
+    the toolbar, primary widget, and status bar (also a toolbar).
+
+    Primary systems initialization must come before component widget
+    construction as many of the component widgets utilize aforementioned
+    systems.
+    """
+
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(
             window_name='Solaire',
             parent=parent,
             icon_path=solaire.core.resources.ICON_PATH
         )
-
-        QtWrappers.set_style(self, QtWrappers.QSS_COMBINEAR)
-        shortucts.init_shortcut_manager(self)  # must come before main widget
+        # -----Primary Systems Initialization-----
+        shortucts.init_shortcut_manager(self)
         broker.register_source('SYSTEM')
         appdata.initialize()
-
+        self._register_subscribers()
         self._is_fullscreen = False
+
+        # -----Window Layout-----
+        self.toolbar = toolbar.SolaireToolbar(self)
+        self.addToolBar(QtCore.Qt.ToolBarArea.TopToolBarArea, self.toolbar)
+        self.widget_main = SolaireClientWidget()
+        self.setCentralWidget(self.widget_main)
+        self.status_bar = status_bar.StatusBar(self)
+        self.addToolBar(QtCore.Qt.ToolBarArea.BottomToolBarArea, self.status_bar)
+
+        self.update_theme()
+
+    def _register_subscribers(self) -> None:
         broker.register_subscriber(
             'window',
             'toggle_full_screen',
@@ -97,16 +128,6 @@ class SolaireClientWindow(QtWrappers.MainWindow):
             'PREFERENCES_UPDATED',
             self.update_theme
         )
-
-        self.widget_main = SolaireClientWidget()
-        self.setCentralWidget(self.widget_main)
-
-        self.toolbar = toolbar.SolaireToolbar(self)
-        self.addToolBar(QtCore.Qt.ToolBarArea.TopToolBarArea, self.toolbar)
-        self.status_bar = status_bar.StatusBar(self)
-        self.addToolBar(QtCore.Qt.ToolBarArea.BottomToolBarArea, self.status_bar)
-
-        self.update_theme()
 
     def toggle_fullscreen(self, _: broker.Event = broker.DUMMY_EVENT) -> None:
         if not self._is_fullscreen:
