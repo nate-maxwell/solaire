@@ -195,6 +195,14 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         self._completer_popup.hide()
         super().focusOutEvent(e)
 
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+        try:
+            if hasattr(self, '_completion_thread') and self._completion_thread.isRunning():
+                self._completion_thread.quit()
+                self._completion_thread.wait(2000)
+        finally:
+            super().closeEvent(event)
+
     def jump_to_line(self, line_no: int) -> None:
         """Jump to a specific line in the editor."""
         cursor = self.textCursor()
@@ -459,10 +467,8 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             block = doc.findBlockByNumber(i)
             block.setVisible(not region.is_folded)
 
-        self.document().markContentsDirty(
-            doc.findBlockByNumber(region.start_block).position(),
-            doc.findBlockByNumber(region.end_block).position()
-        )
+        doc.documentLayout().requestUpdate()
+        doc.adjustSize()
 
         self.viewport().update()
         self.fold_area.update()
@@ -928,7 +934,13 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
 
     @QtCore.Slot(int, list)
     def _on_completion_results(self, job_id: int, names: list) -> None:
-        # Drop stale results (user kept typing, new job id superseded)
+        """
+        Handle async completion results from the worker thread.
+
+        Args:
+            job_id (int): The completion job id returned by the worker.
+            names (list): A list of completion names (strings).
+        """
         if job_id != self._completion_job_id:
             return
 
@@ -936,10 +948,36 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             self._completer_popup.hide()
             return
 
-        # Show quickly; keep editor focused for smooth typing
+        items: list[str] = [str(n) for n in names if n]
+        if not items:
+            self._completer_popup.hide()
+            return
+
+        items = self._dedupe_ordered(items)
+        prefix = self._current_prefix()
+        ch_left = self._char_left_of_caret()
+
+        if ch_left != '.':
+            if not prefix:
+                self._completer_popup.hide()
+                return
+
+            items = [s for s in items if s.startswith(prefix)]
+            if not items:
+                self._completer_popup.hide()
+                return
+
+        # Truncate suggestions
+        depth = appdata.Preferences().code_preferences.suggestion_depth
+        if depth > 0:
+            items = items[:depth]
+
+        # Popup under caret
         gp, w = self._popup_position()
         if appdata.Preferences().code_preferences.enable_auto_suggest:
-            self._completer_popup.show_completions(names, gp, w)
+            self._completer_popup.show_completions(items, gp, w)
+        else:
+            self._completer_popup.hide()
 
     def _maybe_hide_popup(self) -> None:
         # Hide when caret moves to a different line or popup would overlap oddly

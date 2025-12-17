@@ -28,20 +28,20 @@ def create_bind_and_start_timer(
     """
     Create a QTimer, bind its timeout, hook a starter signal, and return it.
 
-        Args:
-            parent (QtWidgets.QWidget): QWidget that will own the timer.
-            interval (int): Interval in milliseconds.
-            connected_on_timeout (Connectable): Target to connect to
-                QTimer.timeout (another signal or a zero-arg callable).
-            trigger (SignalInstance): An optional Qt signal that, when emitted,
-                starts the timer. This should be a zero-argument signal to match
-                QTimer.start(). If None, connection is ignored.
-            single_shot (bool): If True, timer fires once; otherwise it
-                repeats. Defaults to True
+    Args:
+        parent (QtWidgets.QWidget): QWidget that will own the timer.
+        interval (int): Interval in milliseconds.
+        connected_on_timeout (Connectable): Target to connect to
+            QTimer.timeout (another signal or a zero-arg callable).
+        trigger (SignalInstance): An optional Qt signal that, when emitted,
+            starts the timer. This should be a zero-argument signal to match
+            QTimer.start(). If None, connection is ignored.
+        single_shot (bool): If True, timer fires once; otherwise it
+            repeats. Defaults to True
 
-        Returns:
-            The configured QTimer instance.
-        """
+    Returns:
+        The configured QTimer instance.
+    """
     timer = QtCore.QTimer(parent)
     timer.setInterval(interval)
     timer.setSingleShot(single_shot)

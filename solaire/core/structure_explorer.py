@@ -82,7 +82,12 @@ class CodeStructureWidget(QtWidgets.QTreeWidget):
                     else:
                         functions.append(name)
 
-            for class_name, class_data in sorted(classes.items()):
+            sorted_classes = sorted(
+                classes.items(),
+                key=lambda kv: (kv[1]['item'].line, kv[0])
+            )
+
+            for class_name, class_data in sorted_classes:
                 class_item = QtWidgets.QTreeWidgetItem(self)
                 class_item.setText(0, f'📦 {class_name}')
                 class_item.setData(
@@ -95,6 +100,7 @@ class CodeStructureWidget(QtWidgets.QTreeWidget):
                 font.setBold(True)
                 class_item.setFont(0, font)
 
+                # Methods already sorted by line (declared order)
                 for method in sorted(class_data['methods'],
                                      key=lambda x: x.line):
                     method_item = QtWidgets.QTreeWidgetItem(class_item)
@@ -107,6 +113,7 @@ class CodeStructureWidget(QtWidgets.QTreeWidget):
 
                 class_item.setExpanded(True)
 
+            # Functions sorted by line (declared order)
             for func in sorted(functions, key=lambda x: x.line):
                 func_item = QtWidgets.QTreeWidgetItem(self)
                 func_item.setText(0, f'⚙️ {func.name}()')
@@ -115,6 +122,7 @@ class CodeStructureWidget(QtWidgets.QTreeWidget):
                     QtCore.Qt.ItemDataRole.UserRole,
                     func.line
                 )
+
 
         except Exception as e:
             error_item = QtWidgets.QTreeWidgetItem(self)

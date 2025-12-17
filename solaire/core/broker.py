@@ -117,7 +117,8 @@ class EventBroker(types.ModuleType):
 
         # We do not value check here as _SOURCE_DICT is default-dict[list].
         subscribers: list[END_POINT] = source_dict[event_name]
-        subscribers.append(subscriber)
+        if subscriber not in subscribers:
+            subscribers.append(subscriber)
         self.emit(self._broker_update)
 
     @staticmethod

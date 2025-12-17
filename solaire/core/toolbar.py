@@ -47,7 +47,7 @@ class SolaireToolbar(QtWrappers.Toolbar):
 
     def _edit_section(self) -> None:
         menu = self.add_menu('Edit')
-        manager = shortucts.shortcut_manager
+        manager = shortucts.init_shortcut_manager(self.parent())
         self.add_menu_command(menu, 'Shortcuts', manager.show_editor)
 
     def _view_section(self) -> None:
