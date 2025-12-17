@@ -33,7 +33,6 @@ class SolaireToolbar(QtWrappers.Toolbar):
         self._view_section()
         self._code_section()
         self._preference_section()
-        self._plugins_section()
         self._help_section()
         self._button_section()
 
@@ -70,9 +69,6 @@ class SolaireToolbar(QtWrappers.Toolbar):
             'Preferences',
             lambda: preferences.show_preferences_widget(self)
         )
-
-    def _plugins_section(self) -> None:
-        menu = self.add_menu('Plugins')
 
     def _help_section(self) -> None:
         menu = self.add_menu('Help')
