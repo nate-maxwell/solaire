@@ -5,7 +5,6 @@ ALl assuming Windows environment variables names and values.
 
 
 import json
-import os
 from dataclasses import asdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -13,15 +12,19 @@ from typing import Any
 from typing import Optional
 from typing import Union
 
-from PySide6TK import QtWrappers
-
 from solaire.core import broker
+
 
 JSON_TYPE = Union[dict, list, int, float, bool, str, None]
 
-_APPDATA_ROAMING_PATH = Path(os.environ['APPDATA'])
+_APPDATA_PATH = Path.home() / 'AppData'
+_APPDATA_ROAMING_PATH = _APPDATA_PATH / 'Roaming'
+
 SOLAIRE_APPDATA_PATH = Path(_APPDATA_ROAMING_PATH, 'Solaire')
-SOLAIRE_PREFERENCES_PATH = Path(SOLAIRE_APPDATA_PATH, 'preferences.json')
+
+SOLAIRE_PREFERENCES_PATH = Path(SOLAIRE_APPDATA_PATH, 'Preferences.json')
+SOLAIRE_SESSION_DATA_PATH = Path(SOLAIRE_APPDATA_PATH, 'SessionData.json')
+
 
 broker.register_source('SYSTEM')
 
@@ -56,7 +59,7 @@ def import_data_from_json(filepath: Path) -> Optional[dict]:
     Returns:
         Optional[dict]: will return data if JSON file exists, else None.
     """
-    if os.path.exists(filepath):
+    if filepath.exists():
         with open(filepath) as file:
             data = json.load(file)
             return data
@@ -198,6 +201,70 @@ class Preferences(object):
         broker.emit(event)
 
 
+# -----Session Data------------------------------------------------------------
+
+
+class SessionData(object):
+    """
+    Singleton container holding all session specific values.
+    Values such as the current opened directory, or other things necessary for
+    the client to function.
+    """
+
+    _instance: Optional['SessionData'] = None
+
+    def __new__(cls, *args: Any, **kwargs: Any) -> 'SessionData':
+        if cls._instance is None:
+            cls._instance = super(SessionData, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self) -> None:
+        # Prevent re-initialization on subsequent calls
+        if getattr(self, '_initialized', False):
+            return
+        self._initialized = True
+
+        # -----Data-----
+        self.project_directory = Path(Path.cwd().anchor)
+
+        # First-time load from disk (if present), else create defaults
+        if SOLAIRE_SESSION_DATA_PATH.exists():
+            self.load()
+        else:
+            self.save()
+
+    def to_dict(self) -> dict[str, JSON_TYPE]:
+        """Serialize to a plain dict."""
+        return {
+            'project_directory': self.project_directory.as_posix()
+        }
+
+    def from_dict(self, data: dict[str, JSON_TYPE]) -> None:
+        """Apply a serialized dict into dataclass fields safely."""
+        self.project_directory = Path(data.get('project_directory', self.project_directory))
+
+    def load(self) -> None:
+        """
+        Load in data from user appdata file if it can be found, otherwise, save
+        default data to user appdata folder.
+        """
+        data = import_data_from_json(SOLAIRE_SESSION_DATA_PATH)
+        if data is not None:
+            self.from_dict(data)
+
+    def save(self) -> None:
+        """
+        Save current data to user's appdata folder.
+        Emit event signaling a potential update to preference data.
+        Emitted data is None as the preference singleton can be accessed from
+        anywhere.
+        """
+        export_data_to_json(SOLAIRE_SESSION_DATA_PATH, self.to_dict(), True)
+        event = broker.Event('SYSTEM', 'SESSION_DATA_UPDATED')
+        broker.emit(event)
+
+
 def initialize() -> None:
     """Call on startup to ensure the preferences singleton is loaded."""
     _ = Preferences()  # Ensures singleton is populated by constructor.
+    _ = SessionData()

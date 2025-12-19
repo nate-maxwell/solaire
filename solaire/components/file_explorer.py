@@ -10,6 +10,7 @@ from typing import Optional
 from PySide6 import QtWidgets
 from PySide6TK import QtWrappers
 
+from solaire.core import appdata
 from solaire.core import broker
 
 
@@ -34,8 +35,8 @@ class SolaireFileTree(QtWidgets.QWidget):
 
         self.lbl_header = QtWidgets.QLabel('Explorer')
 
-        temp_path = Path(__file__).parent.parent.parent
-        self.file_tree = QtWrappers.FileTreeWidget(temp_path, self)
+        path = appdata.SessionData().project_directory
+        self.file_tree = QtWrappers.FileTreeWidget(path, self)
 
     def _create_layout(self) -> None:
         self.setLayout(self.layout_main)
@@ -55,6 +56,8 @@ class SolaireFileTree(QtWidgets.QWidget):
 
     def _on_directory_changed(self, event: broker.Event) -> None:
         self.file_tree.set_root_path(event.data)
+        appdata.SessionData().project_directory = event.data
+        appdata.SessionData().save()
 
 
 def file_opened(path: str) -> None:

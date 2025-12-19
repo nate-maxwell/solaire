@@ -32,7 +32,6 @@ class SolaireToolbar(QtWrappers.Toolbar):
         self._edit_section()
         self._view_section()
         self._code_section()
-        self._preference_section()
         self._help_section()
         self._button_section()
 
@@ -48,6 +47,11 @@ class SolaireToolbar(QtWrappers.Toolbar):
         menu = self.add_menu('Edit')
         manager = shortucts.init_shortcut_manager(self.parent())
         self.add_menu_command(menu, 'Shortcuts', manager.show_editor)
+        self.add_menu_command(
+            menu,
+            'Preferences',
+            lambda: preferences.show_preferences_widget(self)
+        )
 
     def _view_section(self) -> None:
         menu = self.add_menu('View')
@@ -61,14 +65,6 @@ class SolaireToolbar(QtWrappers.Toolbar):
     def _code_section(self) -> None:
         menu = self.add_menu('Code')
         self.add_menu_command(menu, 'Run', common_events.run_code)
-
-    def _preference_section(self) -> None:
-        menu = self.add_menu('Preferences')
-        self.add_menu_command(
-            menu,
-            'Preferences',
-            lambda: preferences.show_preferences_widget(self)
-        )
 
     def _help_section(self) -> None:
         menu = self.add_menu('Help')

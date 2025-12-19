@@ -7,7 +7,6 @@ of the active tab's code, to a git menu, etc.
 """
 
 
-from pathlib import Path
 from typing import Optional
 
 from PySide6 import QtCore
@@ -16,6 +15,7 @@ from PySide6 import QtWidgets
 from solaire.components.file_explorer import SolaireFileTree
 from solaire.components.structure_explorer import CodeStructureWidget
 from solaire.components.git import GitWidget
+from solaire.core import appdata
 from solaire.core import broker
 
 
@@ -38,8 +38,8 @@ class SideBar(QtWidgets.QWidget):
         self.add_widget(SolaireFileTree(parent=self), 'toggle_explorer')
         self.add_widget(CodeStructureWidget(parent=self), 'toggle_structure')
 
-        temp_path = Path(__file__).parent.parent.parent
-        self.add_widget(GitWidget(temp_path, parent=self), 'toggle_git')
+        project_dir = appdata.SessionData().project_directory
+        self.add_widget(GitWidget(project_dir, parent=self), 'toggle_git')
 
     def add_widget(
             self,

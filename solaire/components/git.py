@@ -20,6 +20,8 @@ from PySide6 import QtCore
 from PySide6 import QtGui
 from PySide6 import QtWidgets
 
+from solaire.core import broker
+
 
 @dataclass(frozen=True)
 class GitCommandResult(object):
@@ -61,6 +63,7 @@ class GitWidget(QtWidgets.QWidget):
         self._create_widgets()
         self._create_layout()
         self._create_connections()
+        self._create_subscriptions()
 
         self._set_busy(False)
         self._append_output(f'Repo: {self._repo_path.as_posix()}')
@@ -114,6 +117,19 @@ class GitWidget(QtWidgets.QWidget):
 
         self._runner.result_ready.connect(self._on_result_ready)
         self.result_ready.connect(self._append_result_to_output)
+
+    def _create_subscriptions(self) -> None:
+        """Create subscriptions within core system."""
+        broker.register_subscriber(
+            'common_event',
+            'open_folder',
+            self._on_directory_changed
+        )
+
+    def _on_directory_changed(self, event: broker.Event) -> None:
+        """Subscribable wrapper to set_repo_path(), clearing current output."""
+        self._output.clear()
+        self.set_repo_path(event.data)
 
     def set_repo_path(self, repo_path: Path) -> None:
         """
