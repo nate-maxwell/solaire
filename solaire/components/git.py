@@ -6,6 +6,9 @@ This module provides a QWidget that exposes common Git commands
 using a worker thread to avoid blocking the UI.
 """
 
+# TODO: Replace the output QPlainTextEdit with a menu that builds buttons for
+#  each file that needs to be marked for an operation.
+
 
 import subprocess
 from dataclasses import dataclass
