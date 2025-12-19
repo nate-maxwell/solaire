@@ -14,8 +14,13 @@ from solaire.core import broker
 
 
 class SolaireFileTree(QtWidgets.QWidget):
-    def __init__(self, parent: Optional[QtWidgets.QWidget]) -> None:
+    def __init__(
+            self,
+            visible: bool = True,
+            parent: Optional[QtWidgets.QWidget] = None
+    ) -> None:
         super().__init__(parent)
+        self.setVisible(visible)
         broker.register_source('solaire_file_tree')
 
         self._create_widgets()

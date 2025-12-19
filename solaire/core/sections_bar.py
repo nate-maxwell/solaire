@@ -37,6 +37,11 @@ class SectionsBar(QtWidgets.QWidget):
         self.btn_structure.setIcon(structure_icon)
         self.btn_structure.setToolTip('Code Structure')
 
+        self.btn_git = QtWidgets.QPushButton('')
+        git_icon = QtGui.QIcon(solaire.core.resources.ICON_GIT.as_posix())
+        self.btn_git.setIcon(git_icon)
+        self.btn_git.setToolTip('Git')
+
         self.btn_plugin = QtWidgets.QPushButton('')
         plugin_icon = QtGui.QIcon(solaire.core.resources.ICON_PLUGIN.as_posix())
         self.btn_plugin.setIcon(plugin_icon)
@@ -47,6 +52,7 @@ class SectionsBar(QtWidgets.QWidget):
 
         self.layout.addWidget(self.btn_explorer)
         self.layout.addWidget(self.btn_structure)
+        self.layout.addWidget(self.btn_git)
         self.layout.addStretch()
         self.layout.addWidget(self.btn_plugin)
         self.layout.addWidget(QtWrappers.VerticalSpacer(10))
@@ -54,3 +60,4 @@ class SectionsBar(QtWidgets.QWidget):
     def _create_connections(self) -> None:
         self.btn_explorer.clicked.connect(common_events.toggle_explorer)
         self.btn_structure.clicked.connect(common_events.toggle_structure)
+        self.btn_git.clicked.connect(common_events.toggle_git_menu)

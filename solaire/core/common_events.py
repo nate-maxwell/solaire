@@ -71,13 +71,19 @@ def open_folder() -> None:
 
 def toggle_explorer() -> None:
     """Signal to toggle visibility on file explorer. Emits None."""
-    event = broker.Event('sections_bar', 'toggle_explorer')
+    event = broker.Event('side_bar', 'toggle_explorer')
     broker.emit(event)
 
 
 def toggle_structure() -> None:
     """Signal to toggle visibility on structure explorer. Emits None."""
-    event = broker.Event('sections_bar', 'toggle_structure')
+    event = broker.Event('side_bar', 'toggle_structure')
+    broker.emit(event)
+
+
+def toggle_git_menu() -> None:
+    """Signal to toggle visibility on git commit menu. Emits None."""
+    event = broker.Event('side_bar', 'toggle_git')
     broker.emit(event)
 
 

@@ -25,8 +25,13 @@ class CodeStructureWidget(QtWidgets.QTreeWidget):
     """
     line_clicked = QtCore.Signal(int)
 
-    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
+    def __init__(
+            self,
+            visible: bool = False,
+            parent: Optional[QtWidgets.QWidget] = None
+    ) -> None:
         super().__init__(parent)
+        self.setVisible(visible)
         self.setHeaderLabel('Structure')
         self.setColumnCount(1)
         self.itemClicked.connect(self.on_item_clicked)
