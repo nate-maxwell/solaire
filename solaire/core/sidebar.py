@@ -1,6 +1,9 @@
 """
-Project file explorer.
-QtWidget with nested QTreeView.
+A container for all various menus placed to the left of the editor.
+
+This is the designated area for non-floating menus for auxiliary tools in the
+main IDE. These tools range from the file explorer, to the structure outline
+of the active tab's code, to a git menu, etc.
 """
 
 
@@ -14,7 +17,7 @@ from solaire.core import file_explorer
 from solaire.core import structure_explorer
 
 
-class ExplorerWidget(QtWidgets.QWidget):
+class WidgetShelf(QtWidgets.QWidget):
     """Project file explorer. Supports creating and saving files and folders.
     Creating folders will not affect the loaded project directory.
     """
