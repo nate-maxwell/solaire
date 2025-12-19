@@ -21,7 +21,6 @@ from PySide6TK import QtWrappers
 import solaire.core.resources
 from solaire.core import appdata
 from solaire.core import broker
-from solaire.core import evaluator
 from solaire.core import sidebar
 from solaire.core import sections_bar
 from solaire.core import shortucts
@@ -106,7 +105,6 @@ class SolaireClientWindow(QtWrappers.MainWindow):
         shortucts.init_shortcut_manager(self)
         broker.register_source('SYSTEM')
         appdata.initialize()
-        evaluator.initialize()
         self._register_subscribers()
         self._is_fullscreen = False
 

@@ -102,30 +102,3 @@ def execute_user_code(
         error_type = type(e).__name__
         error_message = str(e)
         return f'{error_type}: {error_message}'
-
-
-def cleanup_user_modules(_: broker.Event = DUMMY_EVENT) -> None:
-    """Remove all modules imported after evaluator initialization.
-
-    This restores sys.modules to its original state as captured in
-    _INITIAL_MODULES, preventing user code from polluting the interpreter.
-
-    Uses broker.DUMMY_EVENT so that this function can also subscribe to folder
-    open event.
-    """
-    to_remove: list[str] = [
-        name for name in sys.modules.keys()
-        if name not in _INITIAL_MODULES
-    ]
-
-    for name in to_remove:
-        sys.modules.pop(name, None)
-
-
-def initialize() -> None:
-    """Initialize the evaluator, creating necessary subscriptions."""
-    broker.register_subscriber(
-        'common_event',
-        'open_folder',
-        cleanup_user_modules
-    )
