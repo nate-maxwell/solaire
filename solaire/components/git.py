@@ -15,6 +15,7 @@ from typing import Sequence
 
 from PySide6 import QtCore
 from PySide6 import QtWidgets
+from PySide6TK import QtWrappers
 
 from solaire.core import broker
 
@@ -82,12 +83,9 @@ class GitWidget(QtWidgets.QWidget):
         self._push_button.setText('Push')
         self._pull_button = QtWidgets.QPushButton(self)
         self._pull_button.setText('Pull')
-        self._status_button = QtWidgets.QPushButton(self)
-        self._status_button.setText('Status')
 
         self._add_selected_button = QtWidgets.QPushButton(self)
         self._add_selected_button.setText('Add Selected')
-
         self._unstage_selected_button = QtWidgets.QPushButton(self)
         self._unstage_selected_button.setText('Unstage Selected')
 
@@ -110,18 +108,16 @@ class GitWidget(QtWidgets.QWidget):
         buttons_row.addWidget(self._commit_button)
         buttons_row.addWidget(self._push_button)
         buttons_row.addWidget(self._pull_button)
-        buttons_row.addWidget(self._status_button)
-        buttons_row.addStretch(1)
 
         stage_row = QtWidgets.QHBoxLayout()
         stage_row.addWidget(self._add_selected_button)
         stage_row.addWidget(self._unstage_selected_button)
-        stage_row.addStretch(1)
 
         root = QtWidgets.QVBoxLayout(self)
         root.addLayout(header)
         root.addWidget(self._message_line_edit)
         root.addLayout(buttons_row)
+        root.addWidget(QtWrappers.HorizontalLine())
         root.addLayout(stage_row)
         root.addWidget(self._progress)
         root.addWidget(self._files_list, 1)
@@ -133,7 +129,6 @@ class GitWidget(QtWidgets.QWidget):
         self._commit_button.clicked.connect(self._on_commit_clicked)
         self._push_button.clicked.connect(self._on_push_clicked)
         self._pull_button.clicked.connect(self._on_pull_clicked)
-        self._status_button.clicked.connect(self._on_status_clicked)
         self._add_selected_button.clicked.connect(self._on_add_selected_clicked)
         self._unstage_selected_button.clicked.connect(
             self._on_unstage_selected_clicked
@@ -183,10 +178,6 @@ class GitWidget(QtWidgets.QWidget):
     def _on_pull_clicked(self) -> None:
         """Handle Pull button click."""
         self._run_git(['pull'])
-
-    def _on_status_clicked(self) -> None:
-        """Handle Status button click."""
-        self._refresh_status()
 
     def _refresh_status(self) -> None:
         """Run a Git status command."""
@@ -255,7 +246,6 @@ class GitWidget(QtWidgets.QWidget):
         self._commit_button.setEnabled(not busy)
         self._push_button.setEnabled(not busy)
         self._pull_button.setEnabled(not busy)
-        self._status_button.setEnabled(not busy)
         self._message_line_edit.setEnabled(not busy)
         self._add_selected_button.setEnabled(not busy)
         self._unstage_selected_button.setEnabled(not busy)
@@ -271,12 +261,13 @@ class GitWidget(QtWidgets.QWidget):
         self.result_ready.emit(result)
 
     def _append_result_to_output(self, result: GitCommandResult) -> None:
-        """Handle command completion.
+        """
+        Handle command completion.
 
         For `git status --porcelain -b`, the file list is rebuilt and each item
         is tagged with a marker:
 
-        - `[x]` : staged (index status is not a space)
+        - `[+]` : staged (index status is not a space)
         - `[ ]` : not staged
 
         Args:
@@ -298,7 +289,8 @@ class GitWidget(QtWidgets.QWidget):
         self._refresh_status()
 
     def _populate_status_list(self, stdout: str) -> None:
-        """Populate the file list from `git status --porcelain -b` output.
+        """
+        Populate the file list from `git status --porcelain -b` output.
 
         Args:
             stdout (str): Raw stdout from the porcelain status command.
@@ -324,8 +316,10 @@ class GitWidget(QtWidgets.QWidget):
         finally:
             self._files_list.blockSignals(False)
 
-    def _parse_porcelain_status(self, stdout: str) -> tuple[str, list[dict[str, str]]]:
-        """Parse `git status --porcelain -b` output.
+    @staticmethod
+    def _parse_porcelain_status(stdout: str) -> tuple[str, list[dict[str, str]]]:
+        """
+        Parse `git status --porcelain -b` output.
 
         Args:
             stdout (str): Raw stdout from git.
@@ -364,7 +358,8 @@ class GitWidget(QtWidgets.QWidget):
         return header, entries
 
     def _format_file_item_text(self, entry: dict[str, str]) -> str:
-        """Format a single file row with a `[x]` / `[ ]` marker.
+        """
+        Format a single file row with a `[+]` / `[ ]` marker.
 
         Args:
             entry (dict[str, str]): Parsed entry.
@@ -375,7 +370,7 @@ class GitWidget(QtWidgets.QWidget):
         xy = entry.get('xy', '  ')
         path = entry.get('path', '')
         staged = self._is_staged_from_xy(xy)
-        marker = '[x]' if staged else '[ ]'
+        marker = '[+]' if staged else '[ ]'
         return f'{marker} {path}'
 
     @staticmethod
@@ -424,7 +419,8 @@ class _GitCommandRunner(QtCore.QObject):
         return self._thread is not None and self._thread.isRunning()
 
     def run(self, repo_path: Path, args: Sequence[str]) -> None:
-        """Start a Git command in a worker thread.
+        """
+        Start a Git command in a worker thread.
 
         Args:
             repo_path (Path): Path to the Git repository.
