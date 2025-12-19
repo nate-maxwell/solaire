@@ -14,7 +14,6 @@ from PySide6 import QtWidgets
 
 from solaire.components.file_explorer import SolaireFileTree
 from solaire.components.structure_explorer import CodeStructureWidget
-from solaire.components.git import GitWidget
 from solaire.core import appdata
 from solaire.core import broker
 
@@ -38,13 +37,10 @@ class SideBar(QtWidgets.QWidget):
         self.add_widget(SolaireFileTree(parent=self), 'toggle_explorer')
         self.add_widget(CodeStructureWidget(parent=self), 'toggle_structure')
 
-        project_dir = appdata.SessionData().project_directory
-        self.add_widget(GitWidget(project_dir, parent=self), 'toggle_git')
-
     def add_widget(
             self,
             wid: QtWidgets.QWidget,
-            visibility_even_name: str
+            visibility_event_name: str
     ) -> None:
         """
         Adds a widget in first-come first-add order to the splitter.
@@ -56,6 +52,6 @@ class SideBar(QtWidgets.QWidget):
         visibility_func: broker.END_POINT = lambda _ : wid.setVisible(not wid.isVisible())
         broker.register_subscriber(
             'side_bar',
-            visibility_even_name,
+            visibility_event_name,
             visibility_func
         )
