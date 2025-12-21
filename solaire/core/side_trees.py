@@ -14,7 +14,7 @@ from PySide6 import QtWidgets
 
 from solaire.components.file_explorer import SolaireFileTree
 from solaire.components.structure_explorer import CodeStructureWidget
-from solaire.components.solaire_git import GitWidget
+from solaire.components.commit import GitWidget
 from solaire.core import broker
 
 
