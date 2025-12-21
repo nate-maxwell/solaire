@@ -81,9 +81,9 @@ def toggle_structure() -> None:
     broker.emit(event)
 
 
-def toggle_git_menu() -> None:
+def toggle_commit_menu() -> None:
     """Signal to toggle visibility on git commit menu. Emits None."""
-    event = broker.Event('side_bar', 'toggle_git')
+    event = broker.Event('side_bar', 'toggle_git_commit')
     broker.emit(event)
 
 

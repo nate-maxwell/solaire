@@ -34,7 +34,7 @@ class SectionsBar(QtWidgets.QWidget):
         self.btn_structure.setToolTip('Code Structure')
 
         self.btn_git = QtWrappers.ImageButton(solaire.core.resources.ICON_GIT)
-        self.btn_git.setToolTip('Git')
+        self.btn_git.setToolTip('Commit')
 
         self.btn_plugin = QtWrappers.ImageButton(solaire.core.resources.ICON_PLUGIN)
         self.btn_plugin.setToolTip('Plugins')
@@ -52,4 +52,4 @@ class SectionsBar(QtWidgets.QWidget):
     def _create_connections(self) -> None:
         self.btn_explorer.clicked.connect(common_events.toggle_explorer)
         self.btn_structure.clicked.connect(common_events.toggle_structure)
-        self.btn_git.clicked.connect(common_events.toggle_git_menu)
+        self.btn_git.clicked.connect(common_events.toggle_commit_menu)

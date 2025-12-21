@@ -14,7 +14,7 @@ from PySide6 import QtWidgets
 
 from solaire.components.file_explorer import SolaireFileTree
 from solaire.components.structure_explorer import CodeStructureWidget
-from solaire.components.commit import GitWidget
+from solaire.components.commit import GitCommitWidget
 from solaire.core import broker
 
 
@@ -36,7 +36,7 @@ class SideBar(QtWidgets.QWidget):
 
         self.add_widget(SolaireFileTree(parent=self), 'toggle_explorer')
         self.add_widget(CodeStructureWidget(parent=self), 'toggle_structure')
-        self.add_widget(GitWidget(parent=self), 'toggle_git')
+        self.add_widget(GitCommitWidget(parent=self), 'toggle_git_commit')
 
     def add_widget(
             self,

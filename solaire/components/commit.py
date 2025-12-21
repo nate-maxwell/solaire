@@ -60,7 +60,7 @@ def get_repo_status() -> dict[Path, str]:
 TreeItemParent = Union[QtWidgets.QTreeWidget, QtWidgets.QTreeWidgetItem]
 
 
-class GitTreeItem(QtWidgets.QTreeWidgetItem):
+class CommitTreeItem(QtWidgets.QTreeWidgetItem):
     def __init__(
         self,
         path: Path,
@@ -74,7 +74,7 @@ class GitTreeItem(QtWidgets.QTreeWidgetItem):
         self.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
 
 
-class GitWidget(QtWidgets.QWidget):
+class GitCommitWidget(QtWidgets.QWidget):
     def __init__(
             self,
             visible: bool = False,
@@ -166,7 +166,7 @@ class GitWidget(QtWidgets.QWidget):
                 continue
 
             color = COLORS[v]
-            item = GitTreeItem(k, self.tree_widget, color, [label])
+            item = CommitTreeItem(k, self.tree_widget, color, [label])
             self.tree_widget.addTopLevelItem(item)
 
     def _check_item_exists(self, text: str) -> bool:
@@ -266,7 +266,7 @@ class GitWidget(QtWidgets.QWidget):
 
         for i in range(self.tree_widget.topLevelItemCount()):
             item = self.tree_widget.topLevelItem(i)
-            if isinstance(item, GitTreeItem) and item.checkState(
+            if isinstance(item, CommitTreeItem) and item.checkState(
                     0) == QtCore.Qt.CheckState.Checked:
                 checked_files.append(item.path)
 

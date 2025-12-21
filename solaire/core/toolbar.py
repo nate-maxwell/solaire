@@ -61,6 +61,9 @@ class SolaireToolbar(QtWrappers.Toolbar):
         self.add_menu_command(
             menu, 'Structure', common_events.toggle_structure
         )
+        self.add_menu_command(
+            menu, 'Git Commit', common_events.toggle_commit_menu
+        )
 
     def _code_section(self) -> None:
         menu = self.add_menu('Code')
