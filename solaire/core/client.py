@@ -21,7 +21,7 @@ from PySide6TK import QtWrappers
 import solaire.core.resources
 from solaire.core import appdata
 from solaire.core import broker
-from solaire.core import sidebar
+from solaire.core import side_trees
 from solaire.core import sections_bar
 from solaire.core import shortucts
 from solaire.core import status_bar
@@ -67,7 +67,7 @@ class SolaireClientWidget(QtWidgets.QWidget):
         self.splitter_left = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
         self.splitter_left.setStyleSheet(splitter_style)
 
-        self.file_explorer = sidebar.SideBar(self)
+        self.file_explorer = side_trees.SideBar(self)
 
     def _create_layout(self) -> None:
         self.splitter_bottom.addWidget(self.tab_editor)

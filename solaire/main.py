@@ -1,3 +1,10 @@
+"""
+Standalone application entry point.
+
+Solaire can alwasy be inherited from to create DCC specific versions, parented
+to the DCC main window via DCC API.
+"""
+
 import sys
 
 from PySide6TK import QtWrappers

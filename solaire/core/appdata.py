@@ -1,6 +1,6 @@
 """
 Environment management for preferences and various application values.
-ALl assuming Windows environment variables names and values.
+All assuming Windows environment variables names and values.
 """
 
 
@@ -21,6 +21,7 @@ _APPDATA_PATH = Path.home() / 'AppData'
 _APPDATA_ROAMING_PATH = _APPDATA_PATH / 'Roaming'
 
 SOLAIRE_APPDATA_PATH = Path(_APPDATA_ROAMING_PATH, 'Solaire')
+SOLAIRE_APPDATA_PATH.mkdir(parents=True, exist_ok=True)
 
 SOLAIRE_PREFERENCES_PATH = Path(SOLAIRE_APPDATA_PATH, 'Preferences.json')
 SOLAIRE_SESSION_DATA_PATH = Path(SOLAIRE_APPDATA_PATH, 'SessionData.json')

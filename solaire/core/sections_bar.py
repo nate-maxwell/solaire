@@ -27,24 +27,16 @@ class SectionsBar(QtWidgets.QWidget):
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
 
-        self.btn_explorer = QtWidgets.QPushButton('')
-        explorer_icon = QtGui.QIcon(solaire.core.resources.ICON_FOLDER.as_posix())
-        self.btn_explorer.setIcon(explorer_icon)
+        self.btn_explorer = QtWrappers.ImageButton(solaire.core.resources.ICON_FOLDER)
         self.btn_explorer.setToolTip('Explorer')
 
-        self.btn_structure = QtWidgets.QPushButton('')
-        structure_icon = QtGui.QIcon(solaire.core.resources.ICON_STRUCTURE.as_posix())
-        self.btn_structure.setIcon(structure_icon)
+        self.btn_structure = QtWrappers.ImageButton(solaire.core.resources.ICON_STRUCTURE)
         self.btn_structure.setToolTip('Code Structure')
 
-        self.btn_git = QtWidgets.QPushButton('')
-        git_icon = QtGui.QIcon(solaire.core.resources.ICON_GIT.as_posix())
-        self.btn_git.setIcon(git_icon)
+        self.btn_git = QtWrappers.ImageButton(solaire.core.resources.ICON_GIT)
         self.btn_git.setToolTip('Git')
 
-        self.btn_plugin = QtWidgets.QPushButton('')
-        plugin_icon = QtGui.QIcon(solaire.core.resources.ICON_PLUGIN.as_posix())
-        self.btn_plugin.setIcon(plugin_icon)
+        self.btn_plugin = QtWrappers.ImageButton(solaire.core.resources.ICON_PLUGIN)
         self.btn_plugin.setToolTip('Plugins')
 
     def _create_layout(self) -> None:
