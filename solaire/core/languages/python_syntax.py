@@ -45,7 +45,7 @@ class PythonHighlighter(QtGui.QSyntaxHighlighter):
 
     # Keywords
     keywords = [
-        'and', 'assert', 'break', 'class', 'continue', 'def',
+        'and', 'assert', 'break', 'class', 'continue',
         'del', 'elif', 'else', 'except', 'exec', 'finally',
         'for', 'from', 'global', 'if', 'import', 'in',
         'is', 'lambda', 'not', 'or', 'pass', 'print',
@@ -99,9 +99,9 @@ class PythonHighlighter(QtGui.QSyntaxHighlighter):
             # self
             QtWrappers.HighlightRule(r'\bself\b', _color_scheme.self_, group=0),
 
-            # 'def' / 'class' followed by an identifier (capture group 1)
-            QtWrappers.HighlightRule(r'\bdef\b\s*(\w+)', _color_scheme.def_, group=1),
-            QtWrappers.HighlightRule(r'\bclass\b\s*(\w+)', _color_scheme.class_, group=1),
+            # Definitions
+            QtWrappers.HighlightRule(r'\bdef\b', _color_scheme.def_, group=0),
+            QtWrappers.HighlightRule(r'\bclass\b', _color_scheme.class_, group=0),
 
             # Numbers
             QtWrappers.HighlightRule(r'\b[+-]?[0-9]+[lL]?\b', _color_scheme.numbers, group=0),

@@ -146,10 +146,15 @@ class PythonCodeColorMenu(PreferenceTopicMenu):
         self.topic_prefs.keyword = self.color_keyword.color().name()
         self.topic_prefs.operator = self.color_operator.color().name()
         self.topic_prefs.brace = self.color_brace.color().name()
+
         self.topic_prefs.string_single = self.color_string_single.color().name()
         self.topic_prefs.string_triple = self.color_string_triple.color().name()
+
         self.topic_prefs.comment = self.color_comment.color().name()
-        self.topic_prefs.numbers = self.color_def.color().name()
+        self.topic_prefs.numbers = self.color_numbers.color().name()
+
+        self.topic_prefs.def_ = self.color_def.color().name()
+        self.topic_prefs.class_ = self.color_class.color().name()
         self.topic_prefs.self_ = self.color_self.color().name()
 
 
