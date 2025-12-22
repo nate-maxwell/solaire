@@ -10,27 +10,6 @@ state changes or values to subscribers.
 
 This broker supports both synchronous and asynchronous subscribers,
 automatically detecting the subscriber type and handling accordingly.
-
-Example usage:
-
->>> from solaire.core import broker
-
-    # Mix sync and async subscribers freely
->>> def sync_handler(event):
->>>     print(f'Immediate: {event.data}')
-
->>> async def async_handler(event):
->>>     await asyncio.sleep(0.1)
->>>     print(f'Async: {event.data}')
-
->>> broker.register_subscriber('editor', 'file_open', sync_handler)
->>> broker.register_subscriber('editor', 'file_open', async_handler)
-
-    # Fire-and-forget
->>> broker.emit(Event('editor', 'file_open', '/file.py'))
-
-    # Or await all
->>> await broker.emit_async(Event('editor', 'file_open', '/file.py'))
 """
 
 
@@ -53,7 +32,7 @@ class Event(object):
     This is what a subscriber will receive.
     """
     source: str
-    """The tool or widget emitting the event."""
+    """The tool or widget emitting the event - FILE_SYS."""
     name: str
     """The event name - file_open, refresh, etc."""
     data: Any = None
@@ -82,7 +61,7 @@ forwarded to subscribers.
 END_POINT = Union[Callable[[Event], None], Callable[[Event], Awaitable[None]]]
 """
 The end point that event info is forwarded to. These are the actions that
-will execute when an event is triggered. Can be sync or async.
+'subscribe' and will execute when an event is triggered. Can be sync or async.
 """
 
 _source_dict_type = dict[str, list[END_POINT]]
@@ -114,6 +93,53 @@ closure around the event topic:subscriber structure.
 # objects that the event is forwarded to.
 
 
+def _make_subscribe_decorator(broker_module: 'EventBroker'):
+    """
+    Create a subscribe decorator with access to the broker module.
+
+    This exists as a function accepting the broker module as an argument so the
+    function can call register_subscriber() on the broker without referring to
+    it using a namespace and thus creating a circular reference.
+    """
+
+    def subscribe_(source_name: str, event_name: str) -> Callable:
+        """
+        Decorator to register a function or static method as a subscriber.
+
+        To register an instance referencing class method (one using 'self'),
+        use broker.register_subscriber('source', 'event_name', self.method).
+
+        Usage:
+            @subscribe('editor', 'file_open')
+            def on_file_open(event: Event) -> None:
+                print(f'File opened: {event.data}')
+        Args:
+            source_name (str): The event source to subscribe to.
+            event_name (str): The specific event name to subscribe to.
+        Returns:
+            Callable: Decorator function that registers the subscriber.
+        Raises:
+            TypeError: If the decorated function has an invalid signature.
+        """
+
+        def decorator(func: END_POINT) -> END_POINT:
+            sig = inspect.signature(func)
+            params = list(sig.parameters.values())
+
+            if not params:  # Must have at least one parameter for the Event
+                raise TypeError(
+                    'Subscriber must accept at least one parameter (Event), '
+                    'but has no parameters'
+                )
+
+            broker_module.register_subscriber(source_name, event_name, func)
+            return func
+
+        return decorator
+
+    return subscribe_
+
+
 class EventBroker(types.ModuleType):
     """
     Primary event coordinator.
@@ -123,13 +149,16 @@ class EventBroker(types.ModuleType):
     Use emit_async() to await all subscribers.
     """
 
-    Event = Event  # Closure to keep Event type valid at runtime.
-    DUMMY_EVENT = DUMMY_EVENT  # Closure to keep valid at runtime.
+    # -----Runtime closures-----
+    Event = Event
+    DUMMY_EVENT = DUMMY_EVENT
+    END_POINT = END_POINT
 
     def __init__(self, name: str) -> None:
         super().__init__(name)
         self._broker_update = broker_update_event
         self._setup_topics()
+        self.subscribe = _make_subscribe_decorator(self)
 
     def _setup_topics(self) -> None:
         """Setup default topics. May grow over time."""
@@ -182,9 +211,9 @@ class EventBroker(types.ModuleType):
         Use emit_async() if you need to await all subscribers.
 
         Args:
-            event (Event): The event to emit
+            event (Event): The event to emit.
         Raises:
-            ValueError: If the event source is not registered
+            ValueError: If the event source is not registered.
         """
         source_name = event.source
         if source_name not in _SOURCES:
@@ -194,9 +223,9 @@ class EventBroker(types.ModuleType):
 
         source = _SOURCES[event.source]
         # We do not value check here as _SOURCE_DICT is default-dict[list].
-        subscribers: list[END_POINT] = source[event.name]
+        event_subscribers: list[END_POINT] = source[event.name]
 
-        for subscriber in subscribers:
+        for subscriber in event_subscribers:
             if inspect.iscoroutinefunction(subscriber):
                 try:
                     loop = asyncio.get_event_loop()
@@ -232,6 +261,7 @@ class EventBroker(types.ModuleType):
             )
 
         source = _SOURCES[event.source]
+        # We do not value check here as _SOURCE_DICT is default-dict[list].
         subscribers: list[END_POINT] = source[event.name]
 
         tasks = []
@@ -258,10 +288,12 @@ sys.modules[__name__] = custom_module
 # -----------------------------------------------------------------------------
 
 
+# noinspection PyUnusedLocal
 def register_source(source_name: str) -> None:
     pass
 
 
+# noinspection PyUnusedLocal
 def register_subscriber(
         source_name: str,
         event_name: str,
@@ -270,9 +302,21 @@ def register_subscriber(
     pass
 
 
+# noinspection PyUnusedLocal
 def emit(event: Event) -> None:
     pass
 
 
+# noinspection PyUnusedLocal
 async def emit_async(event: Event) -> None:
+    pass
+
+
+# noinspection PyUnusedLocal
+def subscribe(source_name: str, event_name: str) -> Callable:
+    pass
+
+
+# noinspection PyUnusedLocal
+def subscribe_async(source_name: str, event_name: str) -> Callable:
     pass

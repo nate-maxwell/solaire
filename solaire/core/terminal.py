@@ -117,11 +117,7 @@ class TerminalWidget(QtWidgets.QTextEdit):
         if install_as_sys:
             self.install()
 
-        broker.register_subscriber(
-            'SYSTEM',
-            'FLUSH',
-            self.flush
-        )
+        broker.register_subscriber('SYSTEM', 'FLUSH', self.flush)
 
     def install(self) -> None:
         """Replace sys.stdout/sys.stderr with the terminal streams."""
