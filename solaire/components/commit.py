@@ -32,11 +32,14 @@ def get_repo_status() -> dict[Path, str]:
     Returns:
         dict[Path, str].
     """
-    repo = git.Repo(appdata.SessionData().project_directory)
-    if repo.bare:
-        return {}
-
     status = {}
+
+    try:
+        repo = git.Repo(appdata.SessionData().project_directory)
+    except git.exc.InvalidGitRepositoryError:
+        return status
+    if repo.bare:
+        return status
 
     # Modified and Deleted
     for item in repo.index.diff(None):
