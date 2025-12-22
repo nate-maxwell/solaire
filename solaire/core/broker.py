@@ -182,7 +182,7 @@ class EventBroker(types.ModuleType):
         Use emit_async() if you need to await all subscribers.
 
         Args:
-            event: The event to emit
+            event (Event): The event to emit
         Raises:
             ValueError: If the event source is not registered
         """
@@ -221,7 +221,7 @@ class EventBroker(types.ModuleType):
         is complete before continuing.
 
         Args:
-            event: The event to emit
+            event (Event): The event to emit
         Raises:
             ValueError: If the event source is not registered
         """
