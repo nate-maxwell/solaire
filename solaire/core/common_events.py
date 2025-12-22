@@ -99,13 +99,15 @@ def show_output() -> None:
     broker.emit(event)
 
 
-def run_code() -> None:
-    """Run the active file's code. Emits None."""
-    event = broker.Event('SYSTEM', 'RUN')
-    broker.emit(event)
-
 
 def flush_output() -> None:
     """Clears stdout and stderr. Emits None."""
     event = broker.Event('SYSTEM', 'FLUSH')
+    broker.emit(event)
+
+
+def run_code() -> None:
+    """Run the active file's code. Emits None."""
+    flush_output()
+    event = broker.Event('SYSTEM', 'RUN')
     broker.emit(event)

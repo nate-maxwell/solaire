@@ -11,9 +11,8 @@ from pathlib import Path
 from typing import Any
 from typing import Optional
 
-from solaire.core import broker
 from solaire.core import common_events
-from solaire.core.broker import DUMMY_EVENT
+
 
 _PROJECT_PATH: Optional[Path] = None
 _USER_NAMESPACE: dict[str, Any] = {}

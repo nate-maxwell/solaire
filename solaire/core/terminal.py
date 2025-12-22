@@ -6,13 +6,17 @@ from PySide6 import QtCore
 from PySide6 import QtGui
 from PySide6 import QtWidgets
 
+from solaire.core import broker
+
 
 class _QtStream(QtCore.QObject):
-    """Qt-friendly text sink that emits written chunks via a signal.
+    """
+    Qt-friendly text sink that emits written chunks via a signal.
 
     Args:
-        is_error: If True, mark chunks as error (stderr).
-        tee: Optional secondary stream to also write to (e.g., original sys.stdout/sys.stderr).
+        is_error (bool): If True, mark chunks as error (stderr).
+        tee (Optional[TextIO]): Optional secondary stream to also write to
+            (e.g., original sys.stdout/sys.stderr).
     """
     text_emitted = QtCore.Signal(str, bool)
 
@@ -47,13 +51,16 @@ class _QtStream(QtCore.QObject):
 
 
 class TerminalWidget(QtWidgets.QTextEdit):
-    """PySide6 terminal showing stdout/stderr in white/red.
+    """
+    PySide6 terminal showing stdout/stderr in white/red.
 
     Args:
-        parent: Optional parent widget.
-        install_as_sys: If True, replace sys.stdout/sys.stderr immediately.
-        wrap_lines: If True, enable line wrapping in the view.
-        tee_to_original: If True, also mirror output to original sys streams.
+        parent (Optional[QtWidgets.QWidget]): Optional parent widget.
+        install_as_sys (bool): If True, replace sys.stdout/sys.stderr
+            immediately.
+        wrap_lines (bool): If True, enable line wrapping in the view.
+        tee_to_original (bool): If True, also mirror output to original sys
+            streams.
     """
 
     def __init__(
@@ -89,7 +96,7 @@ class TerminalWidget(QtWidgets.QTextEdit):
         pal.setColor(QtGui.QPalette.ColorRole.Text, QtGui.QColor(240, 240, 240))
         self.setPalette(pal)
 
-        # Keep originals so we can restore
+        # Keep originals so they can be restored
         self._old_stdout: Optional[TextIO] = sys.stdout
         self._old_stderr: Optional[TextIO] = sys.stderr
 
@@ -110,6 +117,12 @@ class TerminalWidget(QtWidgets.QTextEdit):
         if install_as_sys:
             self.install()
 
+        broker.register_subscriber(
+            'SYSTEM',
+            'FLUSH',
+            self.flush
+        )
+
     def install(self) -> None:
         """Replace sys.stdout/sys.stderr with the terminal streams."""
         sys.stdout = self.stdout_stream
@@ -125,6 +138,10 @@ class TerminalWidget(QtWidgets.QTextEdit):
     def write(self, text: str, *, is_error: bool = False) -> None:
         """Programmatically write text to the terminal."""
         self._append_text(text, is_error)
+
+    def flush(self, _: broker.Event = broker.DUMMY_EVENT) -> None:
+        """Clear the terminal content."""
+        self.clear()
 
     @QtCore.Slot(str, bool)
     def _append_text(self, text: str, is_error: bool) -> None:
