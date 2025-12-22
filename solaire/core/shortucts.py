@@ -76,12 +76,12 @@ class ShortcutManager(QtWrappers.KeyShortcutManager):
         )
 
 
-shortcut_manager: Optional[ShortcutManager] = None
+_shortcut_manager: Optional[ShortcutManager] = None
 
 
 def init_shortcut_manager(parent: QtWidgets.QWidget) -> ShortcutManager:
-    global shortcut_manager
-    if shortcut_manager is None:
-        shortcut_manager = ShortcutManager(parent)
+    global _shortcut_manager
+    if _shortcut_manager is None:
+        _shortcut_manager = ShortcutManager(parent)
 
-    return shortcut_manager
+    return _shortcut_manager
