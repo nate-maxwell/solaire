@@ -266,6 +266,6 @@ class SessionData(object):
 
 
 def initialize() -> None:
-    """Call on startup to ensure the preferences singleton is loaded."""
-    _ = Preferences()  # Ensures singleton is populated by constructor.
+    """Call on startup to ensure the singletons are loaded."""
+    _ = Preferences()
     _ = SessionData()
