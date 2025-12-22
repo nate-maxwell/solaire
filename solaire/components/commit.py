@@ -274,9 +274,3 @@ class GitCommitWidget(QtWidgets.QWidget):
                 checked_files.append(item.path)
 
         return checked_files
-
-    def mark_all(self) -> None:
-        ...
-
-    def unmark_all(self) -> None:
-        ...
