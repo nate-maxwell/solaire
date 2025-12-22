@@ -99,7 +99,6 @@ def show_output() -> None:
     broker.emit(event)
 
 
-
 def flush_output() -> None:
     """Clears stdout and stderr. Emits None."""
     event = broker.Event('SYSTEM', 'FLUSH')
