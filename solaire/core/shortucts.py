@@ -22,57 +22,49 @@ class ShortcutManager(QtWrappers.KeyShortcutManager):
             'save_file',
             'Ctrl+S',
             common_events.save_file,
-            'Save the current file.',
-            'File'
+            'Save the current file.'
         )
         self.add_shortcut(
             'save_all',
             'Ctrl+Shift+S',
             common_events.save_all,
-            'Save all current files.',
-            'File'
+            'Save all current files.'
         )
         self.add_shortcut(
             'open_file',
             'Ctrl+O',
             common_events.open_file,
-            'Open a file.',
-            'File'
+            'Open a file.'
         )
         self.add_shortcut(
             'open_folder',
             'Ctrl+Shift+O',
             common_events.open_folder,
-            'Open a file.',
-            'File'
+            'Open a file.'
         )
         self.add_shortcut(
             'run_code',
             'Ctrl+Return',
             common_events.run_code,
-            'Run active tab code.',
-            'Code'
+            'Run active tab code.'
         )
         self.add_shortcut(
             'run_code_alt',
             'Ctrl+Enter',
             common_events.run_code,
-            'Run active tab code.',
-            'Code'
+            'Run active tab code.'
         )
         self.add_shortcut(
             'open_terminal',
             'Ctrl+`',
             common_events.show_output,
-            'Show the terminal.',
-            'Code'
+            'Show the terminal.'
         )
         self.add_shortcut(
             'toggle_full_screen',
             'F11',
             common_events.toggle_full_screen,
-            'Toggle fullscreen',
-            'UI'
+            'Toggle fullscreen'
         )
 
 
