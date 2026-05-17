@@ -7,7 +7,7 @@ Still has some work to be done.
 ## Roadmap
 
 - [x] Minimap
-- [x] Basic Intellisense
+- [x] Std Lib and Project Code Intellisense
 - [x] Git Push + Pull
 - [x] Output Terminal
 - [x] Customizable Syntax Highlighting
