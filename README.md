@@ -12,6 +12,7 @@ Still has some work to be done.
 - [x] Output Terminal
 - [x] Customizable Syntax Highlighting
 - [x] JSON Syntax Highlighting
+- [x] YAML Syntax Highlighting
 - [x] Basic Theme Support
 - [x] Customizable Shortcuts
 - [ ] Powershell
