@@ -10,9 +10,7 @@ class OutputTabWidget(QtWidgets.QTabWidget):
         super().__init__(parent)
 
         self.terminal = terminal.TerminalWidget(
-            self,
-            install_as_sys=True,
-            tee_to_original=False
+            self, install_as_sys=True, tee_to_original=False
         )
 
-        self.addTab(self.terminal, 'Terminal')
+        self.addTab(self.terminal, "Terminal")

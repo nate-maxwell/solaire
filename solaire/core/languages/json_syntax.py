@@ -16,9 +16,9 @@ def _fmt(key: str, *styles: str) -> QtGui.QTextCharFormat:
 
 @dataclass
 class JsonSyntaxColors:
-    numerical: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'numeric'))
-    keys: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'key'))
-    values: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'value'))
+    numerical: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, "numeric"))
+    keys: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, "key"))
+    values: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, "value"))
 
 
 _color_scheme = JsonSyntaxColors()

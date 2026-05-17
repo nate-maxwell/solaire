@@ -3,7 +3,6 @@ Widget for code fold marking in a QPlainTextEdit code editor.
 The editor itself is responsible for fold detection.
 """
 
-
 from dataclasses import dataclass
 
 from PySide6 import QtCore
@@ -14,6 +13,7 @@ from PySide6 import QtWidgets
 @dataclass
 class FoldRegion:
     """Represents a foldable region in the document."""
+
     start_block: int
     end_block: int
     is_folded: bool = False
@@ -33,7 +33,7 @@ class FoldArea(QtWidgets.QWidget):
         ``mousePressEvent()``.
     """
 
-    def __init__(self, code_editor: 'CodeEditor') -> None:
+    def __init__(self, code_editor: "CodeEditor") -> None:
         super().__init__(code_editor)
         self.editor = code_editor
         self.setMouseTracking(True)

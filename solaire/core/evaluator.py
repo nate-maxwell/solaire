@@ -5,14 +5,12 @@ This is necessary for running project code and managing runtime namespaces
 of imported modules from user-generated code.
 """
 
-
 import sys
 from pathlib import Path
 from typing import Any
 from typing import Optional
 
 from solaire.core import common_events
-
 
 _PROJECT_PATH: Optional[Path] = None
 _USER_NAMESPACE: dict[str, Any] = {}
@@ -32,7 +30,7 @@ def update_project_path(path: Path) -> None:
     if path.exists():
         _PROJECT_PATH = path
     else:
-        raise ValueError(f'New project path does not exist {path}!')
+        raise ValueError(f"New project path does not exist {path}!")
 
     sys.path.insert(0, path.as_posix())
 
@@ -43,12 +41,12 @@ def _ensure_main_namespace(filename: Optional[Path] = None) -> None:
     """
     global _USER_NAMESPACE
 
-    if '__name__' not in _USER_NAMESPACE:
-        _USER_NAMESPACE['__name__'] = '__main__'
+    if "__name__" not in _USER_NAMESPACE:
+        _USER_NAMESPACE["__name__"] = "__main__"
 
-    _USER_NAMESPACE.setdefault('__package__', None)
+    _USER_NAMESPACE.setdefault("__package__", None)
     if filename is not None:
-        _USER_NAMESPACE['__file__'] = filename.as_posix()
+        _USER_NAMESPACE["__file__"] = filename.as_posix()
 
 
 def reset_user_namespace() -> None:
@@ -59,10 +57,7 @@ def reset_user_namespace() -> None:
 
 
 def execute_user_code(
-        code: str,
-        *,
-        filename: Optional[Path] = None,
-        reset: bool = False
+    code: str, *, filename: Optional[Path] = None, reset: bool = False
 ) -> Optional[str]:
     """Execute user code in a persistent namespace that maintains state
     between executions, similar to a Python REPL or Jupyter notebook.
@@ -88,9 +83,7 @@ def execute_user_code(
 
         # Compile with a filename for clearer tracebacks if provided
         code_obj = compile(
-            code,
-            filename.as_posix() if filename else '<user_code>',
-            'exec'
+            code, filename.as_posix() if filename else "<user_code>", "exec"
         )
 
         # Execute code in the persistent user namespace
@@ -100,4 +93,4 @@ def execute_user_code(
         # Return the error message for display in the IDE
         error_type = type(e).__name__
         error_message = str(e)
-        return f'{error_type}: {error_message}'
+        return f"{error_type}: {error_message}"

@@ -12,7 +12,6 @@ This broker supports both synchronous and asynchronous subscribers,
 automatically detecting the subscriber type and handling accordingly.
 """
 
-
 import sys
 import types
 import asyncio
@@ -31,6 +30,7 @@ class Event(object):
     What gets emitted by a broadcaster, or source, to the broker.
     This is what a subscriber will receive.
     """
+
     source: str
     """The tool or widget emitting the event - FILE_SYS."""
     name: str
@@ -39,7 +39,7 @@ class Event(object):
     """The payload data - file path, timestamp, etc."""
 
 
-DUMMY_EVENT = Event('', '')
+DUMMY_EVENT = Event("", "")
 """
 A blank event for functions that do not require payload data but would like to
 subscribe to an event.
@@ -49,10 +49,10 @@ independently of event triggering.
 """
 
 
-BROKER_SOURCE = 'BROKER'
+BROKER_SOURCE = "BROKER"
 """A source for broker observability and maintenance."""
 
-broker_update_event = Event('BROKER', 'UPDATE')
+broker_update_event = Event("BROKER", "UPDATE")
 """
 An event for when the broker itself is affected, rather than event info being
 forwarded to subscribers.
@@ -66,11 +66,7 @@ The end point that event info is forwarded to. These are the actions that
 
 _source_dict_type = dict[str, list[END_POINT]]
 
-_SOURCES: dict[str, _source_dict_type] = {
-    'BROKER': {
-        'UPDATE': []
-    }
-}
+_SOURCES: dict[str, _source_dict_type] = {"BROKER": {"UPDATE": []}}
 """The broker's record of each topic name to event_name:subscriber records.
 
 This is kept outside of the replaced module class to create a protected
@@ -93,7 +89,7 @@ closure around the event topic:subscriber structure.
 # objects that the event is forwarded to.
 
 
-def _make_subscribe_decorator(broker_module: 'EventBroker'):
+def _make_subscribe_decorator(broker_module: "EventBroker"):
     """
     Create a subscribe decorator with access to the broker module.
 
@@ -128,8 +124,8 @@ def _make_subscribe_decorator(broker_module: 'EventBroker'):
 
             if not params:  # Must have at least one parameter for the Event
                 raise TypeError(
-                    'Subscriber must accept at least one parameter (Event), '
-                    'but has no parameters'
+                    "Subscriber must accept at least one parameter (Event), "
+                    "but has no parameters"
                 )
 
             broker_module.register_subscriber(source_name, event_name, func)
@@ -174,10 +170,7 @@ class EventBroker(types.ModuleType):
             self.emit(self._broker_update)
 
     def register_subscriber(
-            self,
-            source_name: str,
-            event_name: str,
-            subscriber: END_POINT
+        self, source_name: str, event_name: str, subscriber: END_POINT
     ) -> None:
         """
         Register a subscriber (sync or async) to an event.
@@ -218,7 +211,7 @@ class EventBroker(types.ModuleType):
         source_name = event.source
         if source_name not in _SOURCES:
             raise ValueError(
-                f'{source_name} is not currently registered in the broker!'
+                f"{source_name} is not currently registered in the broker!"
             )
 
         source = _SOURCES[event.source]
@@ -257,7 +250,7 @@ class EventBroker(types.ModuleType):
         source_name = event.source
         if source_name not in _SOURCES:
             raise ValueError(
-                f'{source_name} is not currently registered in the broker!'
+                f"{source_name} is not currently registered in the broker!"
             )
 
         source = _SOURCES[event.source]
@@ -295,9 +288,7 @@ def register_source(source_name: str) -> None:
 
 # noinspection PyUnusedLocal
 def register_subscriber(
-        source_name: str,
-        event_name: str,
-        subscriber: END_POINT
+    source_name: str, event_name: str, subscriber: END_POINT
 ) -> None:
     pass
 

@@ -15,9 +15,8 @@ from PySide6TK import QtWrappers
 from solaire.core import appdata
 from solaire.core import theme
 
-
-ENABLED = 'Enabled'
-DISABLED = 'Disabled'
+ENABLED = "Enabled"
+DISABLED = "Disabled"
 
 
 class PreferenceTopicMenu(QtWrappers.GroupBox):
@@ -39,39 +38,39 @@ class PreferenceTopicMenu(QtWrappers.GroupBox):
 class CodePreferencesMenu(PreferenceTopicMenu):
 
     def __init__(self) -> None:
-        super().__init__('Code')
+        super().__init__("Code")
         self.topic_prefs = self.prefs.code_preferences
 
-        self.tab_type = QtWrappers.LabeledComboBox('Tab Type')
+        self.tab_type = QtWrappers.LabeledComboBox("Tab Type")
         self.tab_type.add_items([appdata.TAB_TYPE_SPACE, appdata.TAB_TYPE_TAB])
         self.tab_type.set_current_text(self.topic_prefs.tab_type)
         self.add_widget(self.tab_type)
 
-        self.tab_space_width = QtWrappers.LabeledSpinBox('Tab Space Width')
+        self.tab_space_width = QtWrappers.LabeledSpinBox("Tab Space Width")
         self.tab_space_width.set_value(self.topic_prefs.tab_space_width)
         self.add_widget(self.tab_space_width)
 
         self.add_widget(QtWrappers.HorizontalLine())
 
-        self.guide_column_enabled = QtWrappers.LabeledComboBox('Enable Vertical Guide')
+        self.guide_column_enabled = QtWrappers.LabeledComboBox("Enable Vertical Guide")
         self.guide_column_enabled.add_items([ENABLED, DISABLED])
         enabled = ENABLED if self.topic_prefs.enable_vertical_guide else DISABLED
         self.guide_column_enabled.set_current_text(enabled)
         self.add_widget(self.guide_column_enabled)
 
-        self.guide_column = QtWrappers.LabeledSpinBox('Vertical Guide Column')
+        self.guide_column = QtWrappers.LabeledSpinBox("Vertical Guide Column")
         self.guide_column.set_value(self.topic_prefs.guide_column)
         self.add_widget(self.guide_column)
 
         self.add_widget(QtWrappers.HorizontalLine())
 
-        self.auto_suggest = QtWrappers.LabeledComboBox('Enable Auto-Suggest')
+        self.auto_suggest = QtWrappers.LabeledComboBox("Enable Auto-Suggest")
         self.auto_suggest.add_items([ENABLED, DISABLED])
         enabled = ENABLED if self.topic_prefs.enable_auto_suggest else DISABLED
         self.auto_suggest.set_current_text(enabled)
         self.add_widget(self.auto_suggest)
 
-        self.suggestion_depth = QtWrappers.LabeledSpinBox('Suggestion Depth')
+        self.suggestion_depth = QtWrappers.LabeledSpinBox("Suggestion Depth")
         self.suggestion_depth.set_value(self.topic_prefs.suggestion_depth)
         self.add_widget(self.suggestion_depth)
 
@@ -94,49 +93,53 @@ class CodePreferencesMenu(PreferenceTopicMenu):
 class PythonCodeColorMenu(PreferenceTopicMenu):
 
     def __init__(self) -> None:
-        super().__init__('Python Color')
+        super().__init__("Python Color")
         self.topic_prefs = self.prefs.python_code_color
 
         self.glayout_colors = QtWrappers.GridLayout()
         self.add_layout(self.glayout_colors)
 
-        self.glayout_colors.add_to_new_row(QtWidgets.QLabel('Keyword'))
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("Keyword"))
         self.color_keyword = QtWrappers.ColorButton(self.topic_prefs.keyword, self)
         self.glayout_colors.add_to_last_row(self.color_keyword)
 
-        self.glayout_colors.add_to_new_row(QtWidgets.QLabel('Operator'))
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("Operator"))
         self.color_operator = QtWrappers.ColorButton(self.topic_prefs.operator, self)
         self.glayout_colors.add_to_last_row(self.color_operator)
 
-        self.glayout_colors.add_to_new_row(QtWidgets.QLabel('Brace'))
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("Brace"))
         self.color_brace = QtWrappers.ColorButton(self.topic_prefs.brace, self)
         self.glayout_colors.add_to_last_row(self.color_brace)
 
-        self.glayout_colors.add_to_new_row(QtWidgets.QLabel('String Single'))
-        self.color_string_single = QtWrappers.ColorButton(self.topic_prefs.string_single, self)
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("String Single"))
+        self.color_string_single = QtWrappers.ColorButton(
+            self.topic_prefs.string_single, self
+        )
         self.glayout_colors.add_to_last_row(self.color_string_single)
 
-        self.glayout_colors.add_to_new_row(QtWidgets.QLabel('String Triple'))
-        self.color_string_triple = QtWrappers.ColorButton(self.topic_prefs.string_triple, self)
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("String Triple"))
+        self.color_string_triple = QtWrappers.ColorButton(
+            self.topic_prefs.string_triple, self
+        )
         self.glayout_colors.add_to_last_row(self.color_string_triple)
 
-        self.glayout_colors.add_to_new_row(QtWidgets.QLabel('Comment'))
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("Comment"))
         self.color_comment = QtWrappers.ColorButton(self.topic_prefs.comment, self)
         self.glayout_colors.add_to_last_row(self.color_comment)
 
-        self.glayout_colors.add_to_new_row(QtWidgets.QLabel('Numbers'))
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("Numbers"))
         self.color_numbers = QtWrappers.ColorButton(self.topic_prefs.numbers, self)
         self.glayout_colors.add_to_last_row(self.color_numbers)
 
-        self.glayout_colors.add_to_new_row(QtWidgets.QLabel('def'))
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("def"))
         self.color_def = QtWrappers.ColorButton(self.topic_prefs.def_, self)
         self.glayout_colors.add_to_last_row(self.color_def)
 
-        self.glayout_colors.add_to_new_row(QtWidgets.QLabel('class'))
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("class"))
         self.color_class = QtWrappers.ColorButton(self.topic_prefs.class_, self)
         self.glayout_colors.add_to_last_row(self.color_class)
 
-        self.glayout_colors.add_to_new_row(QtWidgets.QLabel('self'))
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("self"))
         self.color_self = QtWrappers.ColorButton(self.topic_prefs.self_, self)
         self.glayout_colors.add_to_last_row(self.color_self)
 
@@ -161,21 +164,21 @@ class PythonCodeColorMenu(PreferenceTopicMenu):
 class JsonCodeColorMenu(PreferenceTopicMenu):
 
     def __init__(self) -> None:
-        super().__init__('JSON Color')
+        super().__init__("JSON Color")
         self.topic_prefs = self.prefs.json_code_color
 
         self.glayout_colors = QtWrappers.GridLayout()
         self.add_layout(self.glayout_colors)
 
-        self.glayout_colors.add_to_new_row(QtWidgets.QLabel('Numeric'))
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("Numeric"))
         self.color_numeric = QtWrappers.ColorButton(self.topic_prefs.numeric, self)
         self.glayout_colors.add_to_last_row(self.color_numeric)
 
-        self.glayout_colors.add_to_new_row(QtWidgets.QLabel('Key'))
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("Key"))
         self.color_key = QtWrappers.ColorButton(self.topic_prefs.key, self)
         self.glayout_colors.add_to_last_row(self.color_key)
 
-        self.glayout_colors.add_to_new_row(QtWidgets.QLabel('Value'))
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("Value"))
         self.color_value = QtWrappers.ColorButton(self.topic_prefs.value, self)
         self.glayout_colors.add_to_last_row(self.color_value)
 
@@ -187,18 +190,77 @@ class JsonCodeColorMenu(PreferenceTopicMenu):
         self.topic_prefs.value = self.color_value.color().name()
 
 
+class YamlCodeColorMenu(PreferenceTopicMenu):
+
+    def __init__(self) -> None:
+        super().__init__("YAML Color")
+        self.topic_prefs = self.prefs.yaml_code_color
+
+        self.glayout_colors = QtWrappers.GridLayout()
+        self.add_layout(self.glayout_colors)
+
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("Key"))
+        self.color_key = QtWrappers.ColorButton(self.topic_prefs.key, self)
+        self.glayout_colors.add_to_last_row(self.color_key)
+
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("Value"))
+        self.color_value = QtWrappers.ColorButton(self.topic_prefs.value, self)
+        self.glayout_colors.add_to_last_row(self.color_value)
+
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("Numeric"))
+        self.color_numeric = QtWrappers.ColorButton(self.topic_prefs.numeric, self)
+        self.glayout_colors.add_to_last_row(self.color_numeric)
+
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("Constant"))
+        self.color_constant = QtWrappers.ColorButton(self.topic_prefs.constant, self)
+        self.glayout_colors.add_to_last_row(self.color_constant)
+
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("Comment"))
+        self.color_comment = QtWrappers.ColorButton(self.topic_prefs.comment, self)
+        self.glayout_colors.add_to_last_row(self.color_comment)
+
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("Anchor"))
+        self.color_anchor = QtWrappers.ColorButton(self.topic_prefs.anchor, self)
+        self.glayout_colors.add_to_last_row(self.color_anchor)
+
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("Tag"))
+        self.color_tag = QtWrappers.ColorButton(self.topic_prefs.tag, self)
+        self.glayout_colors.add_to_last_row(self.color_tag)
+
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("Indicator"))
+        self.color_indicator = QtWrappers.ColorButton(self.topic_prefs.indicator, self)
+        self.glayout_colors.add_to_last_row(self.color_indicator)
+
+        self.glayout_colors.add_to_new_row(QtWidgets.QLabel("Document"))
+        self.color_document = QtWrappers.ColorButton(self.topic_prefs.document, self)
+        self.glayout_colors.add_to_last_row(self.color_document)
+
+        self.add_stretch()
+
+    def sync_settings(self) -> None:
+        self.topic_prefs.key = self.color_key.color().name()
+        self.topic_prefs.value = self.color_value.color().name()
+        self.topic_prefs.numeric = self.color_numeric.color().name()
+        self.topic_prefs.constant = self.color_constant.color().name()
+        self.topic_prefs.comment = self.color_comment.color().name()
+        self.topic_prefs.anchor = self.color_anchor.color().name()
+        self.topic_prefs.tag = self.color_tag.color().name()
+        self.topic_prefs.indicator = self.color_indicator.color().name()
+        self.topic_prefs.document = self.color_document.color().name()
+
+
 class RefreshPreferencesMenu(PreferenceTopicMenu):
     def __init__(self) -> None:
-        super().__init__('Refresh')
+        super().__init__("Refresh")
         self.topic_prefs = self.prefs.refresh
 
-        self.cursor = QtWrappers.LabeledSpinBox('Cursor')
+        self.cursor = QtWrappers.LabeledSpinBox("Cursor")
         self.cursor.set_value(self.topic_prefs.cursor)
         self.add_widget(self.cursor)
 
         self.add_widget(QtWrappers.HorizontalLine())
 
-        self.code_fold = QtWrappers.LabeledSpinBox('Code Folding')
+        self.code_fold = QtWrappers.LabeledSpinBox("Code Folding")
         self.code_fold.set_value(self.topic_prefs.code_fold)
         self.add_widget(self.code_fold)
 
@@ -211,7 +273,7 @@ class RefreshPreferencesMenu(PreferenceTopicMenu):
 
 class ThemePreferenceMenu(PreferenceTopicMenu):
     def __init__(self) -> None:
-        super().__init__('Theme')
+        super().__init__("Theme")
         self.topic_prefs = self.prefs.theme
 
         self.list_theme = QtWidgets.QListWidget()
@@ -237,7 +299,7 @@ class ThemePreferenceMenu(PreferenceTopicMenu):
 
 class PreferencesMenu(QtWrappers.MainWindow):
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
-        super().__init__('Preferences', parent=parent)
+        super().__init__("Preferences", parent=parent)
         self.settings_before = appdata.Preferences().to_dict()
 
         self._create_widgets()
@@ -254,23 +316,25 @@ class PreferencesMenu(QtWrappers.MainWindow):
         self.code_preferences_settings = CodePreferencesMenu()
         self.python_code_color_settings = PythonCodeColorMenu()
         self.json_code_color_settings = JsonCodeColorMenu()
+        self.yaml_code_color_settings = YamlCodeColorMenu()
         self.refresh_settings = RefreshPreferencesMenu()
         self.theme_settings = ThemePreferenceMenu()
 
         self.sa_topic_buttons = QtWrappers.ScrollArea()
         self.sa_topic_buttons.setFixedWidth(200)
-        self.btn_code_preferences = QtWidgets.QPushButton('Code Preferences')
-        self.btn_python_colors = QtWidgets.QPushButton('Python Syntax Colors')
-        self.btn_json_colors = QtWidgets.QPushButton('JSON Syntax Colors')
-        self.btn_refresh = QtWidgets.QPushButton('Refresh Preferences')
-        self.btn_theme = QtWidgets.QPushButton('Theme')
+        self.btn_code_preferences = QtWidgets.QPushButton("Code Preferences")
+        self.btn_python_colors = QtWidgets.QPushButton("Python Syntax Colors")
+        self.btn_json_colors = QtWidgets.QPushButton("JSON Syntax Colors")
+        self.btn_yaml_colors = QtWidgets.QPushButton("YAML Syntax Colors")
+        self.btn_refresh = QtWidgets.QPushButton("Refresh Preferences")
+        self.btn_theme = QtWidgets.QPushButton("Theme")
 
         self.hlayout_actions = QtWidgets.QHBoxLayout()
-        self.btn_ok = QtWidgets.QPushButton('Ok')
+        self.btn_ok = QtWidgets.QPushButton("Ok")
         self.btn_ok.setFixedWidth(100)
-        self.btn_cancel = QtWidgets.QPushButton('Cancel')
+        self.btn_cancel = QtWidgets.QPushButton("Cancel")
         self.btn_cancel.setFixedWidth(100)
-        self.btn_apply = QtWidgets.QPushButton('Apply')
+        self.btn_apply = QtWidgets.QPushButton("Apply")
         self.btn_apply.setFixedWidth(100)
 
     def _create_layout(self) -> None:
@@ -278,6 +342,7 @@ class PreferencesMenu(QtWrappers.MainWindow):
         self.stack_topics.addWidget(self.code_preferences_settings)
         self.stack_topics.addWidget(self.python_code_color_settings)
         self.stack_topics.addWidget(self.json_code_color_settings)
+        self.stack_topics.addWidget(self.yaml_code_color_settings)
         self.stack_topics.addWidget(self.refresh_settings)
         self.stack_topics.addWidget(self.theme_settings)
         self.stack_topics.addWidget(QtWrappers.VerticalSpacer())
@@ -287,6 +352,7 @@ class PreferencesMenu(QtWrappers.MainWindow):
         self.sa_topic_buttons.add_widget(self.btn_code_preferences)
         self.sa_topic_buttons.add_widget(self.btn_python_colors)
         self.sa_topic_buttons.add_widget(self.btn_json_colors)
+        self.sa_topic_buttons.add_widget(self.btn_yaml_colors)
         self.sa_topic_buttons.add_widget(self.btn_refresh)
         self.sa_topic_buttons.add_widget(self.btn_theme)
         self.sa_topic_buttons.add_widget(QtWrappers.VerticalSpacer())
@@ -323,6 +389,9 @@ class PreferencesMenu(QtWrappers.MainWindow):
         self.btn_json_colors.clicked.connect(
             lambda: self.stack_topics.setCurrentWidget(self.json_code_color_settings)
         )
+        self.btn_yaml_colors.clicked.connect(
+            lambda: self.stack_topics.setCurrentWidget(self.yaml_code_color_settings)
+        )
         self.btn_refresh.clicked.connect(
             lambda: self.stack_topics.setCurrentWidget(self.refresh_settings)
         )
@@ -334,6 +403,7 @@ class PreferencesMenu(QtWrappers.MainWindow):
         self.code_preferences_settings.sync_settings()
         self.python_code_color_settings.sync_settings()
         self.json_code_color_settings.sync_settings()
+        self.yaml_code_color_settings.sync_settings()
         self.refresh_settings.sync_settings()
         self.theme_settings.sync_settings()
 

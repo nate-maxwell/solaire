@@ -4,7 +4,6 @@ QPlainTextEdit. Optimized for performance with caching and reduced
 paint operations.
 """
 
-
 from PySide6 import QtCore
 from PySide6 import QtGui
 from PySide6 import QtWidgets
@@ -47,9 +46,7 @@ class CodeMiniMap(QtWidgets.QWidget):
     """
 
     def __init__(
-        self,
-        editor: QtWidgets.QPlainTextEdit,
-        parent: QtWidgets.QWidget | None = None
+        self, editor: QtWidgets.QPlainTextEdit, parent: QtWidgets.QWidget | None = None
     ) -> None:
         super().__init__(parent)
         self.editor = editor
@@ -64,10 +61,12 @@ class CodeMiniMap(QtWidgets.QWidget):
         self._cached_lines = []
 
         self._bg_color = QtGui.QColor(30, 30, 30)
-        self._fallback_color = self._adjust_color_brightness(QtGui.QColor(212, 212, 212))
+        self._fallback_color = self._adjust_color_brightness(
+            QtGui.QColor(212, 212, 212)
+        )
 
         self.editor.textChanged.connect(self._on_text_changed)
-        if hasattr(self.editor, 'folding_changed'):
+        if hasattr(self.editor, "folding_changed"):
             self.editor.folding_changed.connect(self.update)
 
         self.setFixedWidth(120)
@@ -83,7 +82,9 @@ class CodeMiniMap(QtWidgets.QWidget):
             return
         self._color_brightness = value
         self._color_cache.clear()
-        self._fallback_color = self._adjust_color_brightness(QtGui.QColor(212, 212, 212))
+        self._fallback_color = self._adjust_color_brightness(
+            QtGui.QColor(212, 212, 212)
+        )
         self.update()
 
     def _on_text_changed(self) -> None:
@@ -103,7 +104,7 @@ class CodeMiniMap(QtWidgets.QWidget):
         painter.fillRect(self.rect(), self._bg_color)
 
         if not self._cached_lines:
-            self._cached_lines = self.editor.toPlainText().split('\n')
+            self._cached_lines = self.editor.toPlainText().split("\n")
 
         lines = self._cached_lines
         total_lines = len(lines)
@@ -152,7 +153,7 @@ class CodeMiniMap(QtWidgets.QWidget):
                     char_position += len(line) - j
                     break
 
-                if char not in (' ', '\t'):
+                if char not in (" ", "\t"):
                     color = self._get_char_color_cached(char_position)
                     rect.moveTo(left_margin, y_offset)
                     painter.fillRect(rect, color)
@@ -217,10 +218,7 @@ class CodeMiniMap(QtWidgets.QWidget):
         return adjusted
 
     def _draw_viewport_indicator(
-            self,
-            painter: QtGui.QPainter,
-            total_lines: int,
-            scroll_offset: float = 0
+        self, painter: QtGui.QPainter, total_lines: int, scroll_offset: float = 0
     ) -> None:
         """Draw rectangle showing visible portion of editor"""
         if total_lines == 0:
@@ -256,7 +254,7 @@ class CodeMiniMap(QtWidgets.QWidget):
     def _scroll_to_position(self, y: float) -> None:
         """Scroll editor to clicked position in minimap"""
         if not self._cached_lines:
-            self._cached_lines = self.editor.toPlainText().split('\n')
+            self._cached_lines = self.editor.toPlainText().split("\n")
 
         total_lines = len(self._cached_lines)
         if total_lines == 0:
@@ -284,8 +282,7 @@ class CodeMiniMap(QtWidgets.QWidget):
         # Scroll to that line without moving cursor
         scrollbar = self.editor.verticalScrollBar()
         centered_scroll_line = max(
-            scrollbar.minimum(),
-            min(centered_scroll_line, scrollbar.maximum())
+            scrollbar.minimum(), min(centered_scroll_line, scrollbar.maximum())
         )
         scrollbar.setValue(int(centered_scroll_line))
 

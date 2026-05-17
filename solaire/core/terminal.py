@@ -18,13 +18,10 @@ class _QtStream(QtCore.QObject):
         tee (Optional[TextIO]): Optional secondary stream to also write to
             (e.g., original sys.stdout/sys.stderr).
     """
+
     text_emitted = QtCore.Signal(str, bool)
 
-    def __init__(
-            self,
-            is_error: bool = False,
-            tee: Optional[TextIO] = None
-    ) -> None:
+    def __init__(self, is_error: bool = False, tee: Optional[TextIO] = None) -> None:
         super().__init__()
         self.is_error = is_error
         self._tee = tee
@@ -81,13 +78,9 @@ class TerminalWidget(QtWidgets.QTextEdit):
             if wrap_lines
             else QtWidgets.QTextEdit.LineWrapMode.NoWrap
         )
-        self.setStyleSheet(
-            'QTextEdit { background-color: #202020; color: #E0E0E0; }'
-        )
+        self.setStyleSheet("QTextEdit { background-color: #202020; color: #E0E0E0; }")
 
-        fixed = QtGui.QFontDatabase.systemFont(
-            QtGui.QFontDatabase.SystemFont.FixedFont
-        )
+        fixed = QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.SystemFont.FixedFont)
         fixed.setPointSize(10)
         self.setFont(fixed)
 
@@ -117,7 +110,7 @@ class TerminalWidget(QtWidgets.QTextEdit):
         if install_as_sys:
             self.install()
 
-        broker.register_subscriber('SYSTEM', 'FLUSH', self.flush)
+        broker.register_subscriber("SYSTEM", "FLUSH", self.flush)
 
     def install(self) -> None:
         """Replace sys.stdout/sys.stderr with the terminal streams."""
@@ -167,7 +160,7 @@ class TerminalWidget(QtWidgets.QTextEdit):
     def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
         menu = self.createStandardContextMenu()
         menu.addSeparator()
-        act_clear = menu.addAction('Clear')
+        act_clear = menu.addAction("Clear")
 
         chosen = menu.exec(event.globalPos())
         if chosen is act_clear:

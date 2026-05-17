@@ -2,7 +2,6 @@
 Jedi-based code suggestion widget.
 """
 
-
 import jedi
 from PySide6 import QtCore
 from PySide6 import QtWidgets
@@ -12,6 +11,7 @@ from solaire.core import appdata
 
 class CodeCompletionPopup(QtWidgets.QFrame):
     """Lightweight popup for code completions."""
+
     activated = QtCore.Signal(str)  # emits the chosen completion text
 
     def __init__(self, parent: QtWidgets.QWidget) -> None:
@@ -20,11 +20,8 @@ class CodeCompletionPopup(QtWidgets.QFrame):
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
         self.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
 
-        self.setObjectName('CodeCompletionPopup')
-        self.setFrameStyle(
-            QtWidgets.QFrame.Shape.Box |
-            QtWidgets.QFrame.Shadow.Plain
-        )
+        self.setObjectName("CodeCompletionPopup")
+        self.setFrameStyle(QtWidgets.QFrame.Shape.Box | QtWidgets.QFrame.Shadow.Plain)
 
         self._list = QtWidgets.QListWidget(self)
         self._list.setUniformItemSizes(True)
@@ -42,10 +39,7 @@ class CodeCompletionPopup(QtWidgets.QFrame):
         self._list.itemActivated.connect(self._on_item_activated)
 
     def show_completions(
-            self,
-            items: list[str],
-            at_global_pos: QtCore.QPoint,
-            width_px: int
+        self, items: list[str], at_global_pos: QtCore.QPoint, width_px: int
     ) -> None:
         self._list.clear()
         for s in items:
@@ -71,7 +65,7 @@ class CodeCompletionPopup(QtWidgets.QFrame):
 
     def current_text(self) -> str:
         it = self._list.currentItem()
-        return '' if it is None else it.text()
+        return "" if it is None else it.text()
 
     def select_next(self) -> None:
         count = self._list.count()
@@ -104,7 +98,7 @@ class CompletionWorker(QtCore.QObject):
             script = jedi.Script(code=text)
             comps = script.complete(line=line, column=col)
             # optimization cap to items in the list
-            names = [c.name for c in comps[:prefs.suggestion_depth]]
+            names = [c.name for c in comps[: prefs.suggestion_depth]]
         except Exception:
             names = []
         self.results.emit(job_id, names)
@@ -116,5 +110,6 @@ class CompletionBridge(QtCore.QObject):
     requests from the GUI thread into a worker thread.
     Specifically for Jedi code completion.
     """
+
     # code, line, col, job_id
     request = QtCore.Signal(str, int, int, int)

@@ -3,7 +3,6 @@ PySide6 File Tree Widget for Code IDE.
 A comprehensive file browser with icons, context menus, and file filtering.
 """
 
-
 from pathlib import Path
 from typing import Optional
 
@@ -16,13 +15,11 @@ from solaire.core import broker
 
 class SolaireFileTree(QtWidgets.QWidget):
     def __init__(
-            self,
-            visible: bool = True,
-            parent: Optional[QtWidgets.QWidget] = None
+        self, visible: bool = True, parent: Optional[QtWidgets.QWidget] = None
     ) -> None:
         super().__init__(parent)
         self.setVisible(visible)
-        broker.register_source('solaire_file_tree')
+        broker.register_source("solaire_file_tree")
 
         self._create_widgets()
         self._create_layout()
@@ -33,7 +30,7 @@ class SolaireFileTree(QtWidgets.QWidget):
         self.layout_main = QtWidgets.QVBoxLayout()
         self.layout_main.setContentsMargins(0, 0, 0, 0)
 
-        self.lbl_header = QtWidgets.QLabel('Explorer')
+        self.lbl_header = QtWidgets.QLabel("Explorer")
 
         path = appdata.SessionData().project_directory
         self.file_tree = QtWrappers.FileTreeWidget(path, self)
@@ -49,9 +46,7 @@ class SolaireFileTree(QtWidgets.QWidget):
 
     def _create_subscriptions(self) -> None:
         broker.register_subscriber(
-            'common_event',
-            'open_folder',
-            self._on_directory_changed
+            "common_event", "open_folder", self._on_directory_changed
         )
 
     def _on_directory_changed(self, event: broker.Event) -> None:
@@ -61,10 +56,10 @@ class SolaireFileTree(QtWidgets.QWidget):
 
 
 def file_opened(path: str) -> None:
-    event = broker.Event('solaire_file_tree', 'file_opened', Path(path))
+    event = broker.Event("solaire_file_tree", "file_opened", Path(path))
     broker.emit(event)
 
 
 def file_selected(path: str) -> None:
-    event = broker.Event('solaire_file_tree', 'file_selected', Path(path))
+    event = broker.Event("solaire_file_tree", "file_selected", Path(path))
     broker.emit(event)

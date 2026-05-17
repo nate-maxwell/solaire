@@ -17,16 +17,22 @@ def _fmt(key: str, *styles: str) -> QtGui.QTextCharFormat:
 
 @dataclass
 class PythonSyntaxColors:
-    keyword: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'keyword'))
-    operator: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'operator'))
-    brace: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'brace'))
-    string: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'string_single'))
-    string2: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'string_triple'))
-    comment: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'comment', 'italic'))
-    numbers: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'numbers'))
-    def_: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'def_'))
-    class_: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'class_'))
-    self_: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, 'self_'))
+    keyword: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, "keyword"))
+    operator: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, "operator"))
+    brace: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, "brace"))
+    string: QtGui.QTextCharFormat = field(
+        default_factory=partial(_fmt, "string_single")
+    )
+    string2: QtGui.QTextCharFormat = field(
+        default_factory=partial(_fmt, "string_triple")
+    )
+    comment: QtGui.QTextCharFormat = field(
+        default_factory=partial(_fmt, "comment", "italic")
+    )
+    numbers: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, "numbers"))
+    def_: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, "def_"))
+    class_: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, "class_"))
+    self_: QtGui.QTextCharFormat = field(default_factory=partial(_fmt, "self_"))
 
 
 _color_scheme = PythonSyntaxColors()
@@ -45,29 +51,74 @@ class PythonHighlighter(QtGui.QSyntaxHighlighter):
 
     # Keywords
     keywords = [
-        'and', 'assert', 'break', 'class', 'continue',
-        'del', 'elif', 'else', 'except', 'exec', 'finally',
-        'for', 'from', 'global', 'if', 'import', 'in',
-        'is', 'lambda', 'not', 'or', 'pass', 'print',
-        'raise', 'return', 'try', 'while', 'yield',
-        'None', 'True', 'False'
+        "and",
+        "assert",
+        "break",
+        "class",
+        "continue",
+        "del",
+        "elif",
+        "else",
+        "except",
+        "exec",
+        "finally",
+        "for",
+        "from",
+        "global",
+        "if",
+        "import",
+        "in",
+        "is",
+        "lambda",
+        "not",
+        "or",
+        "pass",
+        "print",
+        "raise",
+        "return",
+        "try",
+        "while",
+        "yield",
+        "None",
+        "True",
+        "False",
     ]
 
     # Operators
     operators = [
-        '=',
+        "=",
         # Comparison
-        '==', '!=', '<', '<=', '>', '>=',
+        "==",
+        "!=",
+        "<",
+        "<=",
+        ">",
+        ">=",
         # Arithmetic
-        r'\+', '-', r'\*', '/', '//', r'\%', r'\*\*',
+        r"\+",
+        "-",
+        r"\*",
+        "/",
+        "//",
+        r"\%",
+        r"\*\*",
         # In-place
-        r'\+=', '-=', r'\*=', '/=', r'\%=',
+        r"\+=",
+        "-=",
+        r"\*=",
+        "/=",
+        r"\%=",
         # Bitwise
-        r'\^', r'\|', r'\&', r'\~', '>>', '<<'
+        r"\^",
+        r"\|",
+        r"\&",
+        r"\~",
+        ">>",
+        "<<",
     ]
 
     # Braces
-    braces = [r'\{', r'\}', r'\(', r'\)', r'\[', r'\]']
+    braces = [r"\{", r"\}", r"\(", r"\)", r"\[", r"\]"]
 
     def __init__(self, parent: QtGui.QTextDocument | None = None) -> None:
         """
@@ -79,8 +130,16 @@ class PythonHighlighter(QtGui.QSyntaxHighlighter):
         super().__init__(parent)
 
         # Multi-line strings (delimiter regex, state id, style)
-        self.tri_single = (QtCore.QRegularExpression(r"[']{3}"), 1, _color_scheme.string2)
-        self.tri_double = (QtCore.QRegularExpression(r'["]{3}'), 2, _color_scheme.string2)
+        self.tri_single = (
+            QtCore.QRegularExpression(r"[']{3}"),
+            1,
+            _color_scheme.string2,
+        )
+        self.tri_double = (
+            QtCore.QRegularExpression(r'["]{3}'),
+            2,
+            _color_scheme.string2,
+        )
 
         # Track triple quotes that occur inside single-line strings so we can
         # skip them in block highlighting.
@@ -90,30 +149,47 @@ class PythonHighlighter(QtGui.QSyntaxHighlighter):
         rules: list[QtWrappers.HighlightRule] = []
 
         # Keywords, operators, braces (whole-match = group 0)
-        rules += [QtWrappers.HighlightRule(rf'\b{w}\b', _color_scheme.keyword, group=0) for w in PythonHighlighter.keywords]
-        rules += [QtWrappers.HighlightRule(o, _color_scheme.operator, group=0) for o in PythonHighlighter.operators]
-        rules += [QtWrappers.HighlightRule(b, _color_scheme.brace, group=0) for b in PythonHighlighter.braces]
+        rules += [
+            QtWrappers.HighlightRule(rf"\b{w}\b", _color_scheme.keyword, group=0)
+            for w in PythonHighlighter.keywords
+        ]
+        rules += [
+            QtWrappers.HighlightRule(o, _color_scheme.operator, group=0)
+            for o in PythonHighlighter.operators
+        ]
+        rules += [
+            QtWrappers.HighlightRule(b, _color_scheme.brace, group=0)
+            for b in PythonHighlighter.braces
+        ]
 
         # Specific tokens
         rules += [
             # self
-            QtWrappers.HighlightRule(r'\bself\b', _color_scheme.self_, group=0),
-
+            QtWrappers.HighlightRule(r"\bself\b", _color_scheme.self_, group=0),
             # Definitions
-            QtWrappers.HighlightRule(r'\bdef\b', _color_scheme.def_, group=0),
-            QtWrappers.HighlightRule(r'\bclass\b', _color_scheme.class_, group=0),
-
+            QtWrappers.HighlightRule(r"\bdef\b", _color_scheme.def_, group=0),
+            QtWrappers.HighlightRule(r"\bclass\b", _color_scheme.class_, group=0),
             # Numbers
-            QtWrappers.HighlightRule(r'\b[+-]?[0-9]+[lL]?\b', _color_scheme.numbers, group=0),
-            QtWrappers.HighlightRule(r'\b[+-]?0[xX][0-9A-Fa-f]+[lL]?\b', _color_scheme.numbers, group=0),
-            QtWrappers.HighlightRule(r'\b[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\b', _color_scheme.numbers, group=0),
-
+            QtWrappers.HighlightRule(
+                r"\b[+-]?[0-9]+[lL]?\b", _color_scheme.numbers, group=0
+            ),
+            QtWrappers.HighlightRule(
+                r"\b[+-]?0[xX][0-9A-Fa-f]+[lL]?\b", _color_scheme.numbers, group=0
+            ),
+            QtWrappers.HighlightRule(
+                r"\b[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\b",
+                _color_scheme.numbers,
+                group=0,
+            ),
             # Strings
-            QtWrappers.HighlightRule(r'"[^"\\]*(\\.[^"\\]*)*"', _color_scheme.string, group=0),
-            QtWrappers.HighlightRule(r"'[^'\\]*(\\.[^'\\]*)*'", _color_scheme.string, group=0),
-
+            QtWrappers.HighlightRule(
+                r'"[^"\\]*(\\.[^"\\]*)*"', _color_scheme.string, group=0
+            ),
+            QtWrappers.HighlightRule(
+                r"'[^'\\]*(\\.[^'\\]*)*'", _color_scheme.string, group=0
+            ),
             # Comments
-            QtWrappers.HighlightRule(r'#[^\n]*', _color_scheme.comment, group=0),
+            QtWrappers.HighlightRule(r"#[^\n]*", _color_scheme.comment, group=0),
         ]
 
         self.rules: list[QtWrappers.HighlightRule] = rules
@@ -126,10 +202,7 @@ class PythonHighlighter(QtGui.QSyntaxHighlighter):
             text: The text block to highlight.
         """
 
-        string_rule_patterns = {
-            r'"[^"\\]*(\\.[^"\\]*)*"',
-            r"'[^'\\]*(\\.[^'\\]*)*'"
-        }
+        string_rule_patterns = {r'"[^"\\]*(\\.[^"\\]*)*"', r"'[^'\\]*(\\.[^'\\]*)*'"}
 
         # First pass: detect embedded triple quotes within single-line strings
         for rule in self.rules:
@@ -181,7 +254,7 @@ class PythonHighlighter(QtGui.QSyntaxHighlighter):
         text: str,
         delimiter: QtCore.QRegularExpression,
         in_state: int,
-        style: QtGui.QTextCharFormat
+        style: QtGui.QTextCharFormat,
     ) -> bool:
         """
         Highlight multi-line triple-quoted strings.
@@ -215,7 +288,12 @@ class PythonHighlighter(QtGui.QSyntaxHighlighter):
             end = end_match.capturedStart() if end_match.hasMatch() else -1
 
             if end >= add:
-                length = end - start + add + (end_match.capturedLength() if end_match.hasMatch() else 0)
+                length = (
+                    end
+                    - start
+                    + add
+                    + (end_match.capturedLength() if end_match.hasMatch() else 0)
+                )
                 self.setCurrentBlockState(0)
             else:
                 self.setCurrentBlockState(in_state)

@@ -10,18 +10,12 @@ from PySide6 import QtWidgets
 from solaire.core import appdata
 from solaire.core import timers
 
+MODIFIED = "MOD"
+UNTRACKED = "UNT"
+ADDED = "ADD"
+DELETED = "DEL"
 
-MODIFIED = 'MOD'
-UNTRACKED = 'UNT'
-ADDED = 'ADD'
-DELETED = 'DEL'
-
-COLORS = {
-    MODIFIED: 'orange',
-    UNTRACKED: 'cyan',
-    ADDED: 'green',
-    DELETED: 'red'
-}
+COLORS = {MODIFIED: "orange", UNTRACKED: "cyan", ADDED: "green", DELETED: "red"}
 
 
 def get_repo_status() -> dict[Path, str]:
@@ -53,7 +47,7 @@ def get_repo_status() -> dict[Path, str]:
         status[Path(file)] = UNTRACKED
 
     # Staged
-    for item in repo.index.diff('HEAD'):
+    for item in repo.index.diff("HEAD"):
         if Path(item.a_path) not in status:
             status[Path(item.a_path)] = ADDED
 
@@ -68,8 +62,8 @@ class CommitTreeItem(QtWidgets.QTreeWidgetItem):
         self,
         path: Path,
         parent: Optional[TreeItemParent] = None,
-        color: str = 'white',
-        strings: Optional[list[str]] = None
+        color: str = "white",
+        strings: Optional[list[str]] = None,
     ) -> None:
         super().__init__(parent, strings)
         self.path = path
@@ -79,9 +73,7 @@ class CommitTreeItem(QtWidgets.QTreeWidgetItem):
 
 class GitCommitWidget(QtWidgets.QWidget):
     def __init__(
-            self,
-            visible: bool = False,
-            parent: Optional[QtWidgets.QWidget] = None
+        self, visible: bool = False, parent: Optional[QtWidgets.QWidget] = None
     ) -> None:
         super().__init__(parent)
         self.setVisible(visible)
@@ -98,8 +90,8 @@ class GitCommitWidget(QtWidgets.QWidget):
 
         # -----File Status-----
         self.tree_widget = QtWidgets.QTreeWidget()
-        self.tree_widget.setHeaderLabel('Commit')
-        font = QtGui.QFont('Courier New', 10)
+        self.tree_widget.setHeaderLabel("Commit")
+        font = QtGui.QFont("Courier New", 10)
         self.tree_widget.setFont(font)
         self.tree_widget.setSelectionMode(
             QtWidgets.QAbstractItemView.SelectionMode.NoSelection
@@ -111,19 +103,19 @@ class GitCommitWidget(QtWidgets.QWidget):
         self.wid_commit = QtWidgets.QWidget()
 
         self.hlayout_mark = QtWidgets.QHBoxLayout()
-        self.btn_mark_all = QtWidgets.QPushButton('Check All')
-        self.btn_unmark_all = QtWidgets.QPushButton('Uncheck All')
+        self.btn_mark_all = QtWidgets.QPushButton("Check All")
+        self.btn_unmark_all = QtWidgets.QPushButton("Uncheck All")
 
         self.vlayout_commit = QtWidgets.QVBoxLayout()
         self.vlayout_commit.setContentsMargins(0, 0, 0, 0)
 
         self.pte_commit_message = QtWidgets.QPlainTextEdit()
-        self.pte_commit_message.setPlaceholderText('Commit Message')
+        self.pte_commit_message.setPlaceholderText("Commit Message")
 
         self.hlayout_buttons = QtWidgets.QHBoxLayout()
-        self.btn_refresh = QtWidgets.QPushButton('Refresh')
-        self.btn_commit = QtWidgets.QPushButton('Commit')
-        self.btn_commit_push = QtWidgets.QPushButton('Commit and Push...')
+        self.btn_refresh = QtWidgets.QPushButton("Refresh")
+        self.btn_commit = QtWidgets.QPushButton("Commit")
+        self.btn_commit_push = QtWidgets.QPushButton("Commit and Push...")
 
     def _create_layout(self) -> None:
         self.hlayout_mark.addWidget(self.btn_mark_all)
@@ -153,18 +145,15 @@ class GitCommitWidget(QtWidgets.QWidget):
 
     def _create_timers(self) -> None:
         self.refresh_timer = timers.create_bind_and_start_timer(
-            self,
-            1500,
-            self.refresh,
-            single_shot=False
+            self, 1500, self.refresh, single_shot=False
         )
         self.refresh_timer.start()
 
     def refresh(self) -> None:
         for k, v in get_repo_status().items():
-            spacing = 20-len(k.name)
-            spacer = ' ' * (spacing + 2)
-            label = f'[{v}] {k.name}{spacer}{k.parent}'
+            spacing = 20 - len(k.name)
+            spacer = " " * (spacing + 2)
+            label = f"[{v}] {k.name}{spacer}{k.parent}"
             if self._check_item_exists(label):
                 continue
 
@@ -173,9 +162,7 @@ class GitCommitWidget(QtWidgets.QWidget):
             self.tree_widget.addTopLevelItem(item)
 
     def _check_item_exists(self, text: str) -> bool:
-        items = self.tree_widget.findItems(
-            text, QtCore.Qt.MatchFlag.MatchExactly, 0
-        )
+        items = self.tree_widget.findItems(text, QtCore.Qt.MatchFlag.MatchExactly, 0)
         return len(items) > 0
 
     def check_all(self) -> None:
@@ -198,9 +185,7 @@ class GitCommitWidget(QtWidgets.QWidget):
 
         if not commit_message:
             QtWidgets.QMessageBox.warning(
-                self,
-                'No Commit Message',
-                'Please provide a commit message.'
+                self, "No Commit Message", "Please provide a commit message."
             )
             return False
 
@@ -208,9 +193,7 @@ class GitCommitWidget(QtWidgets.QWidget):
 
         if not checked_files:
             QtWidgets.QMessageBox.warning(
-                self,
-                'No Files Selected',
-                'Please check at least one file to commit.'
+                self, "No Files Selected", "Please check at least one file to commit."
             )
             return False
 
@@ -225,17 +208,15 @@ class GitCommitWidget(QtWidgets.QWidget):
 
             QtWidgets.QMessageBox.information(
                 self,
-                'Commit Successful',
-                f'Successfully committed {len(checked_files)} file(s).'
+                "Commit Successful",
+                f"Successfully committed {len(checked_files)} file(s).",
             )
 
             return True
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(
-                self,
-                'Commit Failed',
-                f'Failed to commit: {str(e)}'
+                self, "Commit Failed", f"Failed to commit: {str(e)}"
             )
             self.pte_commit_message.setPlainText(commit_message)
             return False
@@ -247,20 +228,16 @@ class GitCommitWidget(QtWidgets.QWidget):
 
         try:
             repo = git.Repo(appdata.SessionData().project_directory)
-            origin = repo.remote(name='origin')
+            origin = repo.remote(name="origin")
             origin.push()
 
             QtWidgets.QMessageBox.information(
-                self,
-                'Push Successful',
-                'Successfully pushed to remote.'
+                self, "Push Successful", "Successfully pushed to remote."
             )
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(
-                self,
-                'Push Failed',
-                f'Failed to push: {str(e)}'
+                self, "Push Failed", f"Failed to push: {str(e)}"
             )
 
     def _get_checked_files(self) -> list[Path]:
@@ -269,8 +246,10 @@ class GitCommitWidget(QtWidgets.QWidget):
 
         for i in range(self.tree_widget.topLevelItemCount()):
             item = self.tree_widget.topLevelItem(i)
-            if isinstance(item, CommitTreeItem) and item.checkState(
-                    0) == QtCore.Qt.CheckState.Checked:
+            if (
+                isinstance(item, CommitTreeItem)
+                and item.checkState(0) == QtCore.Qt.CheckState.Checked
+            ):
                 checked_files.append(item.path)
 
         return checked_files

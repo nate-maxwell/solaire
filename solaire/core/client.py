@@ -9,7 +9,6 @@ loads and initializes all systems and then constructs all widgets that get
 placed on screen.
 """
 
-
 from pathlib import Path
 from typing import Optional
 
@@ -29,8 +28,6 @@ from solaire.core import editor_tabs
 from solaire.core import toolbar
 from solaire.core import output_tabs
 from solaire.core import theme
-
-
 
 splitter_style = """
 QSplitter::handle {
@@ -96,14 +93,14 @@ class SolaireClientWindow(QtWrappers.MainWindow):
 
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(
-            window_name='Solaire',
+            window_name="Solaire",
             parent=parent,
-            icon_path=solaire.core.resources.ICON_PATH
+            icon_path=solaire.core.resources.ICON_PATH,
         )
 
         # -----Primary Systems Initialization-----
         shortucts.init_shortcut_manager(self)
-        broker.register_source('SYSTEM')
+        broker.register_source("SYSTEM")
         appdata.initialize()
         self._register_subscribers()
         self._is_fullscreen = False
@@ -120,15 +117,9 @@ class SolaireClientWindow(QtWrappers.MainWindow):
 
     def _register_subscribers(self) -> None:
         broker.register_subscriber(
-            'window',
-            'toggle_full_screen',
-            self.toggle_fullscreen
+            "window", "toggle_full_screen", self.toggle_fullscreen
         )
-        broker.register_subscriber(
-            'SYSTEM',
-            'PREFERENCES_UPDATED',
-            self.update_theme
-        )
+        broker.register_subscriber("SYSTEM", "PREFERENCES_UPDATED", self.update_theme)
 
     def toggle_fullscreen(self, _: broker.Event = broker.DUMMY_EVENT) -> None:
         if not self._is_fullscreen:

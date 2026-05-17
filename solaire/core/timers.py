@@ -5,7 +5,6 @@ Honestly, this mostly exists because I keep forgetting all the necessary
 settings on QTimers.
 """
 
-
 from typing import Any
 from typing import Callable
 from typing import Optional
@@ -14,16 +13,15 @@ from typing import Union
 from PySide6 import QtCore
 from PySide6 import QtWidgets
 
-
 Connectable = Union[QtCore.SignalInstance, Callable[..., Any]]
 
 
 def create_bind_and_start_timer(
-        parent: QtWidgets.QWidget,
-        interval: int,
-        connected_on_timeout: Connectable,
-        trigger: Optional[QtCore.SignalInstance] = None,
-        single_shot: bool = True
+    parent: QtWidgets.QWidget,
+    interval: int,
+    connected_on_timeout: Connectable,
+    trigger: Optional[QtCore.SignalInstance] = None,
+    single_shot: bool = True,
 ) -> QtCore.QTimer:
     """
     Create a QTimer, bind its timeout, hook a starter signal, and return it.

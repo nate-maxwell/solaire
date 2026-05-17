@@ -3,7 +3,6 @@ The primary tab manager in the center of the application.
 All tab management is handled here.
 """
 
-
 import time
 from pathlib import Path
 from typing import Optional
@@ -46,7 +45,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
 
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
-        broker.register_source('tab_manager')
+        broker.register_source("tab_manager")
 
         self.setTabBar(DraggableTabBar(self))
         self.setTabsClosable(True)
@@ -71,44 +70,30 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         # -----File Opened-----
 
         broker.register_subscriber(
-            'common_event',
-            'open_file',
-            self._file_opened_subscription
+            "common_event", "open_file", self._file_opened_subscription
         )
         broker.register_subscriber(
-            'solaire_file_tree',
-            'file_opened',
-            self._file_opened_subscription
+            "solaire_file_tree", "file_opened", self._file_opened_subscription
         )
 
         # -----Directory Changed-----
 
         broker.register_subscriber(
-            'common_event',
-            'open_folder',
-            self._directory_changed_subscription
+            "common_event", "open_folder", self._directory_changed_subscription
         )
 
         # -----File Saved-----
         broker.register_subscriber(
-            'common_event',
-            'save_file',
-            self._save_file_subscription
+            "common_event", "save_file", self._save_file_subscription
         )
 
         # -----Save All-----
         broker.register_subscriber(
-            'common_event',
-            'save_all',
-            self._save_all_subscription
+            "common_event", "save_all", self._save_all_subscription
         )
 
         # -----Code-----
-        broker.register_subscriber(
-            'SYSTEM',
-            'RUN',
-            self.run_code
-        )
+        broker.register_subscriber("SYSTEM", "RUN", self.run_code)
 
     def run_code(self, _: broker.Event = broker.DUMMY_EVENT) -> None:
         if not isinstance(self.currentWidget(), CodeEditor):
@@ -121,8 +106,8 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         result: Optional[str] = evaluator.execute_user_code(code)
         after = time.perf_counter()
         elapsed = after - before
-        elapsed_str = f'Executed in {elapsed:.3f} seconds.'
-        print('\n\n', elapsed_str)
+        elapsed_str = f"Executed in {elapsed:.3f} seconds."
+        print("\n\n", elapsed_str)
 
         if result is not None:
             print(result)
@@ -146,24 +131,17 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         self.on_tab_changed(new_idx)
 
     def _directory_changed_subscription(
-        self,
-        _: broker.Event = broker.DUMMY_EVENT
+        self, _: broker.Event = broker.DUMMY_EVENT
     ) -> None:
         """When a directory change has been signaled by the broker."""
         while self.count() > 0:
             self.removeTab(0)
 
-    def _save_file_subscription(
-            self,
-            _: broker.Event = broker.DUMMY_EVENT
-    ) -> None:
+    def _save_file_subscription(self, _: broker.Event = broker.DUMMY_EVENT) -> None:
         """When a file save has been signaled by the broker."""
         self.save_file()
 
-    def _save_all_subscription(
-            self,
-            _: broker.Event = broker.DUMMY_EVENT
-    ) -> None:
+    def _save_all_subscription(self, _: broker.Event = broker.DUMMY_EVENT) -> None:
         """When a save-all event has been signaled by the broker."""
         for i in range(self.count()):
             self.save_file(i)
@@ -176,11 +154,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         except KeyError:
             return
 
-        event = broker.Event(
-            'tab_manager',
-            'active_changed',
-            editor_widget
-        )
+        event = broker.Event("tab_manager", "active_changed", editor_widget)
         broker.emit(event)
 
     def _handle_tab_moved(self, from_index: int, to_index: int) -> None:
@@ -237,9 +211,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         super().mousePressEvent(event)
 
     def add_editor_tab(
-            self,
-            editor_widget: QtWidgets.QPlainTextEdit,
-            file_path: Optional[Path] = None
+        self, editor_widget: QtWidgets.QPlainTextEdit, file_path: Optional[Path] = None
     ) -> int:
         """
         Add a new tab with an editor widget.
@@ -250,7 +222,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         Returns:
             int: Index of the newly added tab
         """
-        title = 'Untitled' if file_path is None else file_path.name
+        title = "Untitled" if file_path is None else file_path.name
         index: int = self.addTab(editor_widget, title)
 
         if file_path is not None:
@@ -282,8 +254,9 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         if index >= 0:
             self._mark_modified(index)
 
-    def _on_modification_changed(self, editor_widget: QtWidgets.QWidget,
-                                 modified: bool) -> None:
+    def _on_modification_changed(
+        self, editor_widget: QtWidgets.QWidget, modified: bool
+    ) -> None:
         """Handle modification changed event from an editor widget"""
         index: int = self._get_widget_index(editor_widget)
         if index >= 0:
@@ -326,7 +299,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         self.removeTab(index)
 
         if self.count() == 0:
-            event = broker.Event('tab_manager', 'all_tabs_closed')
+            event = broker.Event("tab_manager", "all_tabs_closed")
             broker.emit(event)
 
     def _mark_modified(self, index: int) -> None:
@@ -345,11 +318,11 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         """Update tab title to reflect modified state"""
         current_title: str = self.tabText(index)
 
-        if current_title.startswith('* '):
+        if current_title.startswith("* "):
             current_title = current_title[2:]
 
         if self._modified_state.get(index, False):
-            self.setTabText(index, f'* {current_title}')
+            self.setTabText(index, f"* {current_title}")
         else:
             self.setTabText(index, current_title)
 
@@ -383,11 +356,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
 
     # -----File Management-----------------------------------------------------
 
-    def open_file(
-            self,
-            file_path: Path,
-            editor_widget: CodeEditor
-    ) -> int:
+    def open_file(self, file_path: Path, editor_widget: CodeEditor) -> int:
         """
         Open a file in a new tab.
 
@@ -399,12 +368,10 @@ class EditorTabWidget(QtWidgets.QTabWidget):
             int: Index of the tab, or -1 if file couldn't be opened.
         """
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content: str = f.read()
 
-            index: int = self.add_editor_tab(
-                editor_widget, file_path
-            )
+            index: int = self.add_editor_tab(editor_widget, file_path)
 
             editor_widget.document().modificationChanged.disconnect()
             editor_widget.modificationChanged.disconnect()
@@ -434,7 +401,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
             return index
 
         except Exception as e:
-            print(f'Error opening file {file_path.as_posix()}: {e}')
+            print(f"Error opening file {file_path.as_posix()}: {e}")
             return -1
 
     def save_file(self, index: Optional[int] = None) -> bool:
@@ -454,7 +421,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
 
         file_path: Optional[Path] = self._file_paths.get(index)
         if not file_path:
-            print(f'No file path associated with tab {index}')
+            print(f"No file path associated with tab {index}")
             return False
 
         editor_widget: Optional[QtWidgets.QWidget] = self.widget(index)
@@ -462,15 +429,16 @@ class EditorTabWidget(QtWidgets.QTabWidget):
             return False
 
         content: Optional[str] = None
-        if hasattr(editor_widget, 'toPlainText'):
+        if hasattr(editor_widget, "toPlainText"):
             content = editor_widget.toPlainText()
 
         try:
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 f.write(content)
 
-            if hasattr(editor_widget, 'document') and hasattr(
-                    editor_widget.document(), 'setModified'):
+            if hasattr(editor_widget, "document") and hasattr(
+                editor_widget.document(), "setModified"
+            ):
                 editor_widget.document().setModified(False)
 
             self._mark_unmodified(index)
@@ -478,7 +446,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
             return True
 
         except Exception as e:
-            print(f'Error saving file {file_path.as_posix()}: {e}')
+            print(f"Error saving file {file_path.as_posix()}: {e}")
             return False
 
     def get_file_path(self, index: Optional[int] = None) -> Optional[Path]:
@@ -493,8 +461,7 @@ class EditorTabWidget(QtWidgets.QTabWidget):
             index = self.currentIndex()
         return self._modified_state.get(index, False)
 
-    def set_file_path(self, file_path: Path,
-                      index: Optional[int] = None) -> None:
+    def set_file_path(self, file_path: Path, index: Optional[int] = None) -> None:
         """Set the file path for a tab and update its title"""
         if index is None:
             index = self.currentIndex()
@@ -505,6 +472,6 @@ class EditorTabWidget(QtWidgets.QTabWidget):
 
             is_modified: bool = self._modified_state.get(index, False)
             if is_modified:
-                self.setTabText(index, f'* {filename}')
+                self.setTabText(index, f"* {filename}")
             else:
                 self.setTabText(index, filename)

@@ -6,7 +6,6 @@ main IDE. These tools range from the file explorer, to the structure outline
 of the active tab's code, to a git menu, etc.
 """
 
-
 from typing import Optional
 
 from PySide6 import QtCore
@@ -34,15 +33,11 @@ class SideBar(QtWidgets.QWidget):
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
         self.layout_main.addWidget(self.splitter)
 
-        self.add_widget(SolaireFileTree(parent=self), 'toggle_explorer')
-        self.add_widget(CodeStructureWidget(parent=self), 'toggle_structure')
-        self.add_widget(GitCommitWidget(parent=self), 'toggle_git_commit')
+        self.add_widget(SolaireFileTree(parent=self), "toggle_explorer")
+        self.add_widget(CodeStructureWidget(parent=self), "toggle_structure")
+        self.add_widget(GitCommitWidget(parent=self), "toggle_git_commit")
 
-    def add_widget(
-            self,
-            wid: QtWidgets.QWidget,
-            visibility_event_name: str
-    ) -> None:
+    def add_widget(self, wid: QtWidgets.QWidget, visibility_event_name: str) -> None:
         """
         Adds a widget in first-come first-add order to the splitter.
         Hooks widget visibility to the event broker using the given visibility
@@ -50,9 +45,7 @@ class SideBar(QtWidgets.QWidget):
         """
         self.splitter.addWidget(wid)
 
-        visibility_func: broker.END_POINT = lambda _ : wid.setVisible(not wid.isVisible())
-        broker.register_subscriber(
-            'side_bar',
-            visibility_event_name,
-            visibility_func
+        visibility_func: broker.END_POINT = lambda _: wid.setVisible(
+            not wid.isVisible()
         )
+        broker.register_subscriber("side_bar", visibility_event_name, visibility_func)

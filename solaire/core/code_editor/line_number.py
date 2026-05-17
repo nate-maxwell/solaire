@@ -20,7 +20,7 @@ class LineNumberArea(QtWidgets.QWidget):
           into additional digits.
     """
 
-    def __init__(self, code_editor: 'CodeEditor') -> None:
+    def __init__(self, code_editor: "CodeEditor") -> None:
         super().__init__(code_editor)
         self.editor = code_editor
 

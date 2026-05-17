@@ -2,7 +2,6 @@
 Shortcut management for the Solaire applications.
 """
 
-
 from typing import Optional
 
 from PySide6 import QtWidgets
@@ -19,60 +18,56 @@ class ShortcutManager(QtWrappers.KeyShortcutManager):
 
     def _create_shortcuts(self) -> None:
         self.add_shortcut(
-            'save_file',
-            'Ctrl+S',
+            "save_file",
+            "Ctrl+S",
             common_events.save_file,
-            'Save the current file.',
-            'File'
+            "Save the current file.",
+            "File",
         )
         self.add_shortcut(
-            'save_all',
-            'Ctrl+Shift+S',
+            "save_all",
+            "Ctrl+Shift+S",
             common_events.save_all,
-            'Save all current files.',
-            'File'
+            "Save all current files.",
+            "File",
         )
         self.add_shortcut(
-            'open_file',
-            'Ctrl+O',
-            common_events.open_file,
-            'Open a file.',
-            'File'
+            "open_file", "Ctrl+O", common_events.open_file, "Open a file.", "File"
         )
         self.add_shortcut(
-            'open_folder',
-            'Ctrl+Shift+O',
+            "open_folder",
+            "Ctrl+Shift+O",
             common_events.open_folder,
-            'Open a file.',
-            'File'
+            "Open a file.",
+            "File",
         )
         self.add_shortcut(
-            'run_code',
-            'Ctrl+Return',
+            "run_code",
+            "Ctrl+Return",
             common_events.run_code,
-            'Run active tab code.',
-            'Code'
+            "Run active tab code.",
+            "Code",
         )
         self.add_shortcut(
-            'run_code_alt',
-            'Ctrl+Enter',
+            "run_code_alt",
+            "Ctrl+Enter",
             common_events.run_code,
-            'Run active tab code.',
-            'Code'
+            "Run active tab code.",
+            "Code",
         )
         self.add_shortcut(
-            'open_terminal',
-            'Ctrl+`',
+            "open_terminal",
+            "Ctrl+`",
             common_events.show_output,
-            'Show the terminal.',
-            'Code'
+            "Show the terminal.",
+            "Code",
         )
         self.add_shortcut(
-            'toggle_full_screen',
-            'F11',
+            "toggle_full_screen",
+            "F11",
             common_events.toggle_full_screen,
-            'Toggle fullscreen',
-            'UI'
+            "Toggle fullscreen",
+            "UI",
         )
 
 

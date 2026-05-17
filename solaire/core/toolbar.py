@@ -5,7 +5,6 @@ Some menus may not have items in them but are placed as a reminder to fill
 populate them later.
 """
 
-
 from PySide6 import QtWidgets
 from PySide6TK import QtWrappers
 
@@ -17,7 +16,7 @@ from solaire.components import preferences
 
 class SolaireToolbar(QtWrappers.Toolbar):
     def __init__(self, parent: QtWidgets.QWidget) -> None:
-        super().__init__('SolaireToolbar', parent)
+        super().__init__("SolaireToolbar", parent)
         self.setMinimumHeight(22)
         self.setMaximumHeight(26)
         self.setStyleSheet("""
@@ -36,46 +35,34 @@ class SolaireToolbar(QtWrappers.Toolbar):
         self._button_section()
 
     def _file_section(self) -> None:
-        menu = self.add_menu('File')
-        self.add_menu_command(menu, 'Open File', common_events.open_file)
-        self.add_menu_command(menu, 'Open Folder', common_events.open_folder)
-        self.add_menu_command(menu, 'Save', common_events.save_file)
-        self.add_menu_command(menu, 'Save All', common_events.save_all)
-        self.add_menu_command(menu, 'Quit', QtWidgets.QApplication.quit)
+        menu = self.add_menu("File")
+        self.add_menu_command(menu, "Open File", common_events.open_file)
+        self.add_menu_command(menu, "Open Folder", common_events.open_folder)
+        self.add_menu_command(menu, "Save", common_events.save_file)
+        self.add_menu_command(menu, "Save All", common_events.save_all)
+        self.add_menu_command(menu, "Quit", QtWidgets.QApplication.quit)
 
     def _edit_section(self) -> None:
-        menu = self.add_menu('Edit')
+        menu = self.add_menu("Edit")
         manager = shortucts.init_shortcut_manager(self.parent())
-        self.add_menu_command(menu, 'Shortcuts', manager.show_editor)
+        self.add_menu_command(menu, "Shortcuts", manager.show_editor)
         self.add_menu_command(
-            menu,
-            'Preferences',
-            lambda: preferences.show_preferences_widget(self)
+            menu, "Preferences", lambda: preferences.show_preferences_widget(self)
         )
 
     def _view_section(self) -> None:
-        menu = self.add_menu('View')
-        self.add_menu_command(
-            menu, 'File Explorer', common_events.toggle_explorer
-        )
-        self.add_menu_command(
-            menu, 'Structure', common_events.toggle_structure
-        )
-        self.add_menu_command(
-            menu, 'Git Commit', common_events.toggle_commit_menu
-        )
+        menu = self.add_menu("View")
+        self.add_menu_command(menu, "File Explorer", common_events.toggle_explorer)
+        self.add_menu_command(menu, "Structure", common_events.toggle_structure)
+        self.add_menu_command(menu, "Git Commit", common_events.toggle_commit_menu)
 
     def _code_section(self) -> None:
-        menu = self.add_menu('Code')
-        self.add_menu_command(menu, 'Run', common_events.run_code)
+        menu = self.add_menu("Code")
+        self.add_menu_command(menu, "Run", common_events.run_code)
 
     def _help_section(self) -> None:
-        menu = self.add_menu('Help')
-        self.add_menu_command(
-            menu,
-            'About',
-            lambda: about.show_about_widget(self)
-        )
+        menu = self.add_menu("Help")
+        self.add_menu_command(menu, "About", lambda: about.show_about_widget(self))
 
     def _button_section(self) -> None:
         self.add_toolbar_separator(0)

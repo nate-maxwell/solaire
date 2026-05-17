@@ -3,7 +3,6 @@ Vertical bar to toggle visibility on various sections such as file explorer,
 structure explorer, or plugin manager.
 """
 
-
 from PySide6 import QtGui
 from PySide6 import QtWidgets
 from PySide6TK import QtWrappers
@@ -16,6 +15,7 @@ class SectionsBar(QtWidgets.QWidget):
     """Vertical bar with buttons for the file explorer, plugins manager, and
     git menus.
     """
+
     def __init__(self, parent: QtWidgets.QWidget) -> None:
         super().__init__(parent)
 
@@ -28,16 +28,18 @@ class SectionsBar(QtWidgets.QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
 
         self.btn_explorer = QtWrappers.ImageButton(solaire.core.resources.ICON_FOLDER)
-        self.btn_explorer.setToolTip('Explorer')
+        self.btn_explorer.setToolTip("Explorer")
 
-        self.btn_structure = QtWrappers.ImageButton(solaire.core.resources.ICON_STRUCTURE)
-        self.btn_structure.setToolTip('Code Structure')
+        self.btn_structure = QtWrappers.ImageButton(
+            solaire.core.resources.ICON_STRUCTURE
+        )
+        self.btn_structure.setToolTip("Code Structure")
 
         self.btn_git = QtWrappers.ImageButton(solaire.core.resources.ICON_GIT)
-        self.btn_git.setToolTip('Commit')
+        self.btn_git.setToolTip("Commit")
 
         self.btn_plugin = QtWrappers.ImageButton(solaire.core.resources.ICON_PLUGIN)
-        self.btn_plugin.setToolTip('Plugins')
+        self.btn_plugin.setToolTip("Plugins")
 
     def _create_layout(self) -> None:
         self.setLayout(self.layout)
