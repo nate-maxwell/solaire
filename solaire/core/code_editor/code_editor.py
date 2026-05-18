@@ -146,42 +146,65 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             "SYSTEM", "PREFERENCES_UPDATED", self._on_preferences_updated
         )
 
-    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
-        super().resizeEvent(event)
+    def _rebuilt_highlighter(self) -> None:
+        """Recreate the syntax highlighter for the current document."""
+
+        if self._highlighter is None:
+            return
+
+        self._highlighter.setDocument(None)
+        self._highlighter.deleteLater()
+        self._highlighter = None
+
+        if self.syntax_highlighter_cls is None:
+            return
+
+        self._highlighter = self.syntax_highlighter_cls(self.document())
+
+    def _update_editor_margins_and_gutters(self) -> None:
+        line_width = self.line_number_area_width
+        fold_width = self.fold_area_width
+        left_margin = line_width + fold_width
+        right_margin = self.minimap.sizeHint().width()
+
+        self.setViewportMargins(left_margin, 0, right_margin, 0)
+
         cr = self.contentsRect()
 
         self.line_number_area.setGeometry(
-            QtCore.QRect(cr.left(), cr.top(), self.line_number_area_width, cr.height())
+            QtCore.QRect(cr.left(), cr.top(), line_width, cr.height())
         )
-
         self.fold_area.setGeometry(
-            QtCore.QRect(
-                # Position next to line numbers
-                cr.left() + self.line_number_area_width,
-                cr.top(),
-                self.fold_area_width,
-                cr.height(),
-            )
+            QtCore.QRect(cr.left() + line_width, cr.top(), fold_width, cr.height())
         )
 
-        # Position minimap on the right side
-        minimap_width = self.minimap.width()
+        minimap_width = self.minimap.sizeHint().width()
         self.minimap.setGeometry(
             QtCore.QRect(
-                cr.right() - minimap_width, cr.top(), minimap_width, cr.height()
+                cr.right() - minimap_width + 1,
+                cr.top(),
+                minimap_width,
+                cr.height(),
             )
         )
 
         self.line_number_area.raise_()
         self.fold_area.raise_()
+        self.minimap.raise_()
+
+    # -----Line Numbers--------------------------------------------------------
+
+    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self._update_editor_margins_and_gutters()
+
+    def showEvent(self, event: QtGui.QShowEvent) -> None:
+        super().showEvent(event)
+        self._update_editor_margins_and_gutters()
 
     def paintEvent(self, event: QtGui.QPaintEvent):
         super().paintEvent(event)
         self._paint_guide()
-
-    def focusOutEvent(self, e: QtGui.QFocusEvent) -> None:
-        self._completer_popup.hide()
-        super().focusOutEvent(e)
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         try:
@@ -207,6 +230,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
     def setPlainText(self, text, /) -> None:
         super().setPlainText(text)
         self.analyze_fold_regions()
+        self._update_editor_margins_and_gutters()
 
     def _create_cursor_timer(self) -> None:
         prefs = appdata.Preferences().refresh
@@ -272,9 +296,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
         return space
 
     def update_line_number_area_width(self, _) -> None:
-        left_margin = self.line_number_area_width + self.fold_area_width
-        right_margin = self.minimap.sizeHint().width()
-        self.setViewportMargins(left_margin, 0, right_margin, 0)
+        self._update_editor_margins_and_gutters()
 
     def update_line_number_area(self, rect: QtCore.QRect, vertical_scroll: int) -> None:
         if vertical_scroll:
