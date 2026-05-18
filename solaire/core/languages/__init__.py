@@ -9,7 +9,7 @@ from solaire.core.languages.python_syntax import PythonHighlighter
 from solaire.core.languages.json_syntax import JsonHighlighter
 from solaire.core.languages.yaml_syntax import YamlHighlighter
 
-T_Highlighter = TypeVar('T_Highlighter', bound=QtGui.QSyntaxHighlighter)
+T_Highlighter = TypeVar("T_Highlighter", bound=QtGui.QSyntaxHighlighter)
 
 SyntaxHighlighter = Type[T_Highlighter]
 """Any QSyntaxHighlighter class object or derived class object."""
@@ -18,11 +18,11 @@ SyntaxHighlighter = Type[T_Highlighter]
 def generate_highlighter_from_file(filepath: Path) -> Optional[SyntaxHighlighter]:
     """Returns the corresponding highlighter from the file suffix."""
     suffix_highlighters = {
-        '.py': PythonHighlighter,
-        '.pyw': PythonHighlighter,
-        '.json': JsonHighlighter,
-        '.yaml': YamlHighlighter,
-        '.yml': YamlHighlighter,
+        ".py": PythonHighlighter,
+        ".pyw": PythonHighlighter,
+        ".json": JsonHighlighter,
+        ".yaml": YamlHighlighter,
+        ".yml": YamlHighlighter,
     }
 
     if filepath.suffix in suffix_highlighters:

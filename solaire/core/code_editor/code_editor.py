@@ -360,6 +360,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             stripped = text.lstrip()
 
             if not stripped or not stripped.rstrip().endswith(":"):
+                block = block.next()
                 continue
 
             start_block = block.blockNumber()

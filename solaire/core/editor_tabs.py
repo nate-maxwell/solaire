@@ -367,42 +367,33 @@ class EditorTabWidget(QtWidgets.QTabWidget):
         Returns:
             int: Index of the tab, or -1 if file couldn't be opened.
         """
+
+        max_file_size = 5 * 1024 * 1024  # 5 MB
+
         try:
+            if file_path.stat().st_size > max_file_size:
+                print(f"File too large to open: {file_path.as_posix()}")
+                return -1
+
             with open(file_path, "r", encoding="utf-8") as f:
                 content: str = f.read()
-
-            index: int = self.add_editor_tab(editor_widget, file_path)
-
-            editor_widget.document().modificationChanged.disconnect()
-            editor_widget.modificationChanged.disconnect()
-            editor_widget.textChanged.disconnect()
-
-            editor_widget.setPlainText(content)
-
-            editor_widget.document().modificationChanged.connect(
-                lambda modified, widget=editor_widget: self._on_modification_changed(
-                    widget, modified
-                )
-            )
-            editor_widget.modificationChanged.connect(
-                lambda modified, widget=editor_widget: self._on_modification_changed(
-                    widget, modified
-                )
-            )
-            editor_widget.textChanged.connect(
-                lambda widget=editor_widget: self._on_text_changed(widget)
-            )
-
-            editor_widget.document().setModified(False)
-
-            self._modified_state[index] = False
-            self._update_tab_title(index)
-
-            return index
-
-        except Exception as e:
-            print(f"Error opening file {file_path.as_posix()}: {e}")
+        except OSError as e:
+            print(f"Error reading file {file_path.as_posix()}: {e}")
             return -1
+
+        index: int = self.add_editor_tab(editor_widget, file_path)
+
+        # Block signals during initial population so we don't mark dirty.
+        editor_widget.blockSignals(True)
+        try:
+            editor_widget.setPlainText(content)
+            editor_widget.document().setModified(False)
+        finally:
+            editor_widget.blockSignals(False)
+
+        self._modified_state[index] = False
+        self._update_tab_title(index)
+        return index
 
     def save_file(self, index: Optional[int] = None) -> bool:
         """
