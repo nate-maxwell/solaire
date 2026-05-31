@@ -12,7 +12,8 @@ from solaire.core import common_events
 
 
 class SectionsBar(QtWidgets.QWidget):
-    """Vertical bar with buttons for the file explorer, plugins manager, and
+    """
+    Vertical bar with buttons for the file explorer, plugins manager, and
     git menus.
     """
 

@@ -22,7 +22,7 @@ from solaire.core import appdata
 from solaire.core import broker
 from solaire.core import side_trees
 from solaire.core import sections_bar
-from solaire.core import shortucts
+from solaire.core import shortcuts
 from solaire.core import status_bar
 from solaire.core import editor_tabs
 from solaire.core import toolbar
@@ -99,7 +99,7 @@ class SolaireClientWindow(QtWrappers.MainWindow):
         )
 
         # -----Primary Systems Initialization-----
-        shortucts.init_shortcut_manager(self)
+        shortcuts.init_shortcut_manager(self)
         broker.register_source("SYSTEM")
         appdata.initialize()
         self._register_subscribers()

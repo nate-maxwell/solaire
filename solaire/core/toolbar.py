@@ -9,7 +9,7 @@ from PySide6 import QtWidgets
 from PySide6TK import QtWrappers
 
 from solaire.core import common_events
-from solaire.core import shortucts
+from solaire.core import shortcuts
 from solaire.components import about
 from solaire.components import preferences
 
@@ -44,7 +44,7 @@ class SolaireToolbar(QtWrappers.Toolbar):
 
     def _edit_section(self) -> None:
         menu = self.add_menu("Edit")
-        manager = shortucts.init_shortcut_manager(self.parent())
+        manager = shortcuts.init_shortcut_manager(self.parent())
         self.add_menu_command(menu, "Shortcuts", manager.show_editor)
         self.add_menu_command(
             menu, "Preferences", lambda: preferences.show_preferences_widget(self)

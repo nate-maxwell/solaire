@@ -72,6 +72,9 @@ class CodeMiniMap(QtWidgets.QWidget):
         self.setFixedWidth(120)
         self.setMouseTracking(True)
 
+    def sizeHint(self) -> QtCore.QSize:
+        return QtCore.QSize(120, 0)
+
     @property
     def color_brightness(self) -> float:
         return self._color_brightness
